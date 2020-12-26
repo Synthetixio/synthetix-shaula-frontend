@@ -1,0 +1,35 @@
+.dark {
+  scrollbar-face-color: $dark-border-color;
+  scrollbar-base-color: $dark-border-color;
+  scrollbar-3dlight-color: $dark-border-color;
+  scrollbar-highlight-color: $dark-border-color;
+  scrollbar-track-color: $dark-color;
+  scrollbar-arrow-color: $dark-color;
+  scrollbar-shadow-color: $dark-border-color;
+  scrollbar-dark-shadow-color: $dark-border-color;
+
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 3px;
+  }
+  ::-webkit-scrollbar-button {
+    background-color: $dark-color;
+  }
+  ::-webkit-scrollbar-track {
+    background-color: $dark-border-color;
+  }
+  ::-webkit-scrollbar-track-piece {
+    background-color: $dark-color;
+  }
+  ::-webkit-scrollbar-thumb {
+    height: 50px;
+    background-color: #666;
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-corner {
+    background-color: $dark-border-color;
+  }
+  ::-webkit-resizer {
+    background-color: #666;
+  }
+}
