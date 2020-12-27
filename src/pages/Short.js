@@ -8,7 +8,7 @@ export default function() {
   return (
     <MultiCollateral
       collateralAssets={COLLATERAL_ASSETS}
-      targetAssets={SHORT_ASSETS}
+      targetAssetsFilter={() => SHORT_ASSETS}
       short
     />
   );

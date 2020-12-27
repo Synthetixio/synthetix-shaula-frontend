@@ -64,7 +64,7 @@ export const useStyles = makeStyles(theme => ({
   },
 }));
 
-export default function({ collateralAssets, targetAssets, short }) {
+export default function({ collateralAssets, targetAssetsFilter, short }) {
   const classes = useStyles();
   const label = short ? 'Short' : 'Borrow';
 
@@ -75,7 +75,12 @@ export default function({ collateralAssets, targetAssets, short }) {
   const [isApproved, setIsApproved] = React.useState(false);
   const [isTrading, setIsTrading] = React.useState(false);
 
-  const [targetName, setTargetAsset] = React.useState(targetAssets[0]);
+  const [targetName, setTargetAsset] = React.useState(
+    targetAssetsFilter(collateralAssets[0])[0]
+  );
+  const [targetAssets, setTargetAssets] = React.useState(
+    targetAssetsFilter(collateralAssets[0])
+  );
   const [targetDecimals, targetAddress] = TOKENS[targetName];
   const [targetAmountNumber, setTargetAmountNumber] = React.useState(0);
   const targetAmount = React.useMemo(() => {
@@ -275,7 +280,13 @@ export default function({ collateralAssets, targetAssets, short }) {
             labelId="collateralNameLabel"
             id="collateralName"
             value={collateralName}
-            onChange={event => setCollateralAsset(event.target.value)}
+            onChange={event => {
+              const collateralName = event.target.value;
+              setCollateralAsset(collateralName);
+              const targetAssets = targetAssetsFilter(collateralName);
+              setTargetAsset(targetAssets[0]);
+              setTargetAssets(targetAssets);
+            }}
           >
             {collateralAssets.map(name => (
               <MenuItem value={name} key={name}>
