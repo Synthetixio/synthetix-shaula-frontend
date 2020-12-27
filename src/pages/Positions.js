@@ -235,12 +235,14 @@ export default function() {
         setLoans(loans => [{ ...loan, type }, ...loans]);
       };
       const onClose = (owner, id) => {
-        setLoans(loans => loans.filter(loan => loan.id !== id));
+        setLoans(loans => loans.filter(loan => !loan.id.eq(id)));
       };
-      contract.on(contract.filters.LoanCreated(address), onCreate);
-      contract.on(contract.filters.LoanClosed(address), onClose);
-      offs.push(() => contract.off(contract.filters.LoanCreated, onCreate));
-      offs.push(() => contract.off(contract.filters.LoanClosed, onClose));
+      const loanCreatedEvent = contract.filters.LoanCreated(address);
+      const loanClosedEvent = contract.filters.LoanClosed(address);
+      contract.on(loanCreatedEvent, onCreate);
+      contract.on(loanClosedEvent, onClose);
+      offs.push(() => contract.off(loanCreatedEvent, onCreate));
+      offs.push(() => contract.off(loanClosedEvent, onClose));
     }
     return () => {
       offs.forEach(off => off());

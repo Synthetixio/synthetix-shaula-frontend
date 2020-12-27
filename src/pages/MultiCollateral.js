@@ -6,6 +6,7 @@ import { useWallet } from 'contexts/wallet';
 import wallet from 'utils/wallet';
 import { formatUnits } from 'utils/big-number';
 import sl from 'utils/sl';
+import Balance from 'components/Balance';
 import ERC20_CONTRACT_ABI from 'abis/erc20.json';
 import MULTI_COLLATERAL_ERC20_ABI from 'abis/multi-collateral-erc20.json';
 import MULTI_COLLATERAL_ETH_ABI from 'abis/multi-collateral-eth.json';
@@ -93,19 +94,17 @@ export default function({ collateralAssets, targetAssetsFilter, short }) {
       return ethers.BigNumber.from('0');
     }
   }, [targetAmountNumber, targetDecimals]);
-  const [targetBalance, setTargetBalance] = React.useState(
-    ethers.BigNumber.from('0')
-  );
-  const targetContract = React.useMemo(
-    () =>
-      isConnected &&
-      new ethers.Contract(
-        targetAddress,
-        ERC20_CONTRACT_ABI,
-        wallet.ethersWallet
-      ),
-    [isConnected, targetAddress]
-  );
+
+  // const targetContract = React.useMemo(
+  //   () =>
+  //     isConnected &&
+  //     new ethers.Contract(
+  //       targetAddress,
+  //       ERC20_CONTRACT_ABI,
+  //       wallet.ethersWallet
+  //     ),
+  //   [isConnected, targetAddress]
+  // );
 
   const [collateralName, setCollateralAsset] = React.useState(
     collateralAssets[0]
@@ -123,9 +122,7 @@ export default function({ collateralAssets, targetAssetsFilter, short }) {
       return ethers.BigNumber.from('0');
     }
   }, [collateralAmountNumber, collateralDecimals]);
-  const [collateralBalance, setCollateralBalance] = React.useState(
-    ethers.BigNumber.from('0')
-  );
+
   const multiCollateralAddress = short
     ? MULTI_COLLATERAL_SHORT_ADDRESS
     : collateralIsETH
@@ -216,7 +213,6 @@ export default function({ collateralAssets, targetAssetsFilter, short }) {
             MULTI_COLLATERAL_TOKEN_CURRENCIES[targetName]
           ));
       await tx.wait();
-      await Promise.all([checkCollateralBalance(), checkTargetBalance()]);
     } catch (e) {
       sl('error', e);
     } finally {
@@ -235,26 +231,6 @@ export default function({ collateralAssets, targetAssetsFilter, short }) {
   React.useEffect(() => {
     checkCollateralAllowance();
   }, [isConnected, collateralAmount, collateralContract]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const checkCollateralBalance = async () => {
-    if (!isConnected) return;
-    const balance = await (collateralIsETH
-      ? wallet.ethersWallet.getBalance()
-      : collateralContract.balanceOf(address));
-    setCollateralBalance(balance);
-  };
-  React.useEffect(() => {
-    checkCollateralBalance();
-  }, [isConnected, collateralContract]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const checkTargetBalance = async () => {
-    if (!isConnected) return;
-    const balance = await targetContract.balanceOf(address);
-    setTargetBalance(balance);
-  };
-  React.useEffect(() => {
-    checkTargetBalance();
-  }, [isConnected, targetContract]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <Paper className={classes.container}>
@@ -301,10 +277,10 @@ export default function({ collateralAssets, targetAssetsFilter, short }) {
           label={
             <div className="flex flex-grow justify-space">
               <div>Collateral Amount ({collateralName})</div>
-              <div>
-                Balance: {formatUnits(collateralBalance, collateralDecimals)}{' '}
-                {collateralName}
-              </div>
+              <Balance
+                isETH={collateralIsETH}
+                tokenAddress={collateralAddress}
+              />
             </div>
           }
           type="number"
@@ -324,10 +300,7 @@ export default function({ collateralAssets, targetAssetsFilter, short }) {
               <div>
                 {label} Amount ({targetName})
               </div>
-              <div>
-                Balance: {formatUnits(targetBalance, targetDecimals)}{' '}
-                {targetName}
-              </div>
+              <Balance tokenAddress={targetAddress} />
             </div>
           }
           type="number"
