@@ -4,9 +4,9 @@
   </a>
 </div>
 
-### Synthentix
+### Synthentix Shaula Frontend
 
-UI to interact with the new Synthetix Multi-Collateral Loans and Shorting features.
+UI to interact with the new Synthetix Shaula release containing Multi-Collateral Loans and Shorting features.
 
 ### Demo
 
