@@ -13,6 +13,7 @@ import Header from 'components/Header';
 import Borrow from './Borrow';
 import Short from './Short';
 import Positions from './Positions';
+import PendingWithdrawals from './PendingWithdrawals';
 
 const history = createHashHistory();
 
@@ -30,7 +31,6 @@ const useStyles = makeStyles(theme => ({
     },
   },
   types: {
-    marginBottom: MARGIN,
     [theme.breakpoints.down('sm')]: {
       flexDirection: 'column',
       marginBottom: '0',
@@ -47,6 +47,9 @@ const useStyles = makeStyles(theme => ({
     [theme.breakpoints.down('sm')]: {
       margin: '0 10px 10px',
     },
+  },
+  mb: {
+    marginBottom: MARGIN,
   },
 }));
 
@@ -69,7 +72,13 @@ export default function App() {
       <Router {...{ history }}>
         <div className={classes.container}>
           <Header />
-          <div className={clsx(classes.types, 'flex flex-grow justify-space')}>
+          <div
+            className={clsx(
+              classes.types,
+              classes.mb,
+              'flex flex-grow justify-space'
+            )}
+          >
             <div className={clsx(classes.mr, 'flex', 'flex-grow')}>
               <Borrow />
             </div>
@@ -77,7 +86,12 @@ export default function App() {
               <Short />
             </div>
           </div>
-          <Positions />
+          <div className={clsx(classes.mb)}>
+            <PendingWithdrawals />
+          </div>
+          <div className={clsx(classes.mb)}>
+            <Positions />
+          </div>
         </div>
       </Router>
     </MuiThemeProvider>

@@ -292,7 +292,7 @@ function Loan({ loan, contracts }) {
     try {
       setIsClosing(true);
       const tx = await contracts[type].close(id);
-      sl('info', 'Waiting for transaction to be mined.', 'Done');
+      sl('success', 'Waiting for transaction to be mined.', 'Done!');
       await tx.wait();
     } catch (e) {
       sl('error', e);
