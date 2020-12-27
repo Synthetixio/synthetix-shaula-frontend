@@ -142,6 +142,18 @@ export default function() {
     [isConnected]
   );
 
+  const contracts = {
+    erc20: erc20CollateralContract,
+    eth: ethCollateralContract,
+    short: shortCollateralContract,
+  };
+
+  const stateContracts = {
+    erc20: erc20CollateralStateContract,
+    eth: ethCollateralStateContract,
+    short: shortCollateralStateContract,
+  };
+
   const loadLoans = async () => {
     if (
       !(
@@ -152,19 +164,17 @@ export default function() {
     )
       return;
     setIsLoading(true);
-    const loans = [];
+    let loans = [];
     for (
       let i = 0;
       i < (await erc20CollateralStateContract.getNumLoans(address));
       i++
     ) {
       const loan = await erc20CollateralStateContract.loans(address, i);
-      if (!loan.amount.isZero()) {
-        loans.push({
-          ...loan,
-          type: 'erc20',
-        });
-      }
+      loans.push({
+        ...loan,
+        type: 'erc20',
+      });
     }
     for (
       let i = 0;
@@ -172,12 +182,10 @@ export default function() {
       i++
     ) {
       const loan = await ethCollateralStateContract.loans(address, i);
-      if (!loan.amount.isZero()) {
-        loans.push({
-          ...loan,
-          type: 'eth',
-        });
-      }
+      loans.push({
+        ...loan,
+        type: 'eth',
+      });
     }
     for (
       let i = 0;
@@ -185,13 +193,12 @@ export default function() {
       i++
     ) {
       const loan = await shortCollateralStateContract.loans(address, i);
-      if (!loan.amount.isZero()) {
-        loans.push({
-          ...loan,
-          type: 'short',
-        });
-      }
+      loans.push({
+        ...loan,
+        type: 'short',
+      });
     }
+    loans = loans.filter(loan => !loan.amount.isZero());
     loans.sort((a, b) => {
       if (a.id.gt(b.id)) return -1;
       if (a.id.lt(b.id)) return 1;
@@ -203,20 +210,45 @@ export default function() {
 
   const close = async (type, id) => {
     try {
-      const contracts = {
-        erc20CollateralContract,
-        ethCollateralContract,
-        shortCollateralContract,
-      };
-      await contracts[`${type}CollateralContract`].close(id);
+      await contracts[type].close(id);
       sl('info', 'Waiting for transaction to be mined.', 'Done');
     } catch (e) {
       sl('error', e);
     }
   };
 
+  // subscribe to loan open+close
+  const subscribe = () => {
+    if (
+      !(
+        erc20CollateralStateContract &&
+        ethCollateralStateContract &&
+        shortCollateralStateContract
+      )
+    )
+      return () => {};
+    const offs = [];
+    for (const type in contracts) {
+      const contract = contracts[type];
+      const onCreate = async (owner, id) => {
+        const loan = await stateContracts[type].getLoan(owner, id);
+        setLoans(loans => [{ ...loan, type }, ...loans]);
+      };
+      const onClose = (owner, id) => {
+        setLoans(loans => loans.filter(loan => loan.id !== id));
+      };
+      contract.on(contract.filters.LoanCreated(address), onCreate);
+      contract.on(contract.filters.LoanClosed(address), onClose);
+      offs.push(() => contract.off(contract.filters.LoanCreated, onCreate));
+      offs.push(() => contract.off(contract.filters.LoanClosed, onClose));
+    }
+    return () => {
+      offs.forEach(off => off());
+    };
+  };
   React.useEffect(() => {
-    loadLoans(); // eslint-disable-next-line react-hooks/exhaustive-deps
+    loadLoans();
+    return subscribe(); // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     erc20CollateralStateContract,
     ethCollateralStateContract,
