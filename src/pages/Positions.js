@@ -41,6 +41,9 @@ export const useStyles = makeStyles(theme => ({
       width: '100%',
       fontFamily: 'GT-America-Compressed-Regular',
     },
+    [theme.breakpoints.down('sm')]: {
+      margin: 10,
+    },
   },
   content: {
     flex: 1,

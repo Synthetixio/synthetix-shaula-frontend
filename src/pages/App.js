@@ -25,22 +25,28 @@ const useStyles = makeStyles(theme => ({
     padding: '100px 0 30px',
     position: 'relative',
     [theme.breakpoints.down('sm')]: {
-      padding: '130px 0 10px',
+      padding: '70px 0 10px',
       width: 'auto',
     },
   },
   types: {
     marginBottom: MARGIN,
-    // margin: '20px 15px',
-    // [theme.breakpoints.down('sm')]: {
-    //   margin: '20px 5px',
-    // },
+    [theme.breakpoints.down('sm')]: {
+      flexDirection: 'column',
+      marginBottom: '0',
+    },
   },
   ml: {
     marginLeft: MARGIN / 2,
+    [theme.breakpoints.down('sm')]: {
+      margin: '0 10px 10px',
+    },
   },
   mr: {
     marginRight: MARGIN / 2,
+    [theme.breakpoints.down('sm')]: {
+      margin: '0 10px 10px',
+    },
   },
 }));
 
