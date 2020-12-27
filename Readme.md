@@ -4,7 +4,7 @@
   </a>
 </div>
 
-### Synthentix Shaula Frontend
+### Synthetix Shaula Frontend
 
 UI to interact with the new Synthetix Shaula release containing Multi-Collateral Loans and Shorting features.
 
@@ -27,7 +27,7 @@ UI to interact with the new Synthetix Shaula release containing Multi-Collateral
 - Run `make` to boot app.
 - Visit frontend at http://localhost:5555 (or configured port).
 
-### Build
+#### Build
 
-1. Run `yarn build`
-2. Serve the generated `build` folder
+1. Run `yarn build`.
+2. Serve the generated `build` folder.
