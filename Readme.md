@@ -4,7 +4,7 @@
   </a>
 </div>
 
-### Sythentix
+### Synthentix
 
 UI to interact with the new Synthetix Multi-Collateral Loans and Shorting features.
 
