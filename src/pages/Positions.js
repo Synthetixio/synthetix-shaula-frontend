@@ -20,15 +20,6 @@ import COLLATERAL_STATE_ABI from 'abis/collateral-state.json';
 import MULTI_COLLATERAL_ERC20_ABI from 'abis/multi-collateral-erc20.json';
 import MULTI_COLLATERAL_ETH_ABI from 'abis/multi-collateral-eth.json';
 import MULTI_COLLATERAL_SHORT_ABI from 'abis/multi-collateral-short.json';
-import {
-  ERC20_COLLATERAL_STATE_ADDRESS,
-  ETH_COLLATERAL_STATE_ADDRESS,
-  SHORT_COLLATERAL_STATE_ADDRESS,
-  MULTI_COLLATERAL_ERC20_ADDRESS,
-  MULTI_COLLATERAL_ETH_ADDRESS,
-  MULTI_COLLATERAL_SHORT_ADDRESS,
-  MULTI_COLLATERAL_TOKEN_CURRENCIES_BY_ADDRESS,
-} from 'config';
 
 export const useStyles = makeStyles(theme => ({
   container: {
@@ -69,7 +60,17 @@ export const useStyles = makeStyles(theme => ({
 export default function() {
   const classes = useStyles();
 
-  const { address } = useWallet();
+  const {
+    address,
+    config: {
+      ERC20_COLLATERAL_STATE_ADDRESS,
+      ETH_COLLATERAL_STATE_ADDRESS,
+      SHORT_COLLATERAL_STATE_ADDRESS,
+      MULTI_COLLATERAL_ERC20_ADDRESS,
+      MULTI_COLLATERAL_ETH_ADDRESS,
+      MULTI_COLLATERAL_SHORT_ADDRESS,
+    },
+  } = useWallet();
   const isConnected = !!address;
 
   const [isLoading, setIsLoading] = React.useState(false);
@@ -78,67 +79,73 @@ export default function() {
   const erc20CollateralStateContract = React.useMemo(
     () =>
       isConnected &&
+      ERC20_COLLATERAL_STATE_ADDRESS &&
       new ethers.Contract(
         ERC20_COLLATERAL_STATE_ADDRESS,
         COLLATERAL_STATE_ABI,
         wallet.ethersWallet
       ),
-    [isConnected]
+    [isConnected, ERC20_COLLATERAL_STATE_ADDRESS]
   );
 
   const ethCollateralStateContract = React.useMemo(
     () =>
       isConnected &&
+      ETH_COLLATERAL_STATE_ADDRESS &&
       new ethers.Contract(
         ETH_COLLATERAL_STATE_ADDRESS,
         COLLATERAL_STATE_ABI,
         wallet.ethersWallet
       ),
-    [isConnected]
+    [isConnected, ETH_COLLATERAL_STATE_ADDRESS]
   );
 
   const shortCollateralStateContract = React.useMemo(
     () =>
       isConnected &&
+      SHORT_COLLATERAL_STATE_ADDRESS &&
       new ethers.Contract(
         SHORT_COLLATERAL_STATE_ADDRESS,
         COLLATERAL_STATE_ABI,
         wallet.ethersWallet
       ),
-    [isConnected]
+    [isConnected, SHORT_COLLATERAL_STATE_ADDRESS]
   );
 
   const erc20CollateralContract = React.useMemo(
     () =>
       isConnected &&
+      MULTI_COLLATERAL_ERC20_ADDRESS &&
       new ethers.Contract(
         MULTI_COLLATERAL_ERC20_ADDRESS,
         MULTI_COLLATERAL_ERC20_ABI,
         wallet.ethersWallet
       ),
-    [isConnected]
+    [isConnected, MULTI_COLLATERAL_ERC20_ADDRESS]
   );
 
   const ethCollateralContract = React.useMemo(
     () =>
       isConnected &&
+      MULTI_COLLATERAL_ETH_ADDRESS &&
       new ethers.Contract(
         MULTI_COLLATERAL_ETH_ADDRESS,
         MULTI_COLLATERAL_ETH_ABI,
         wallet.ethersWallet
       ),
-    [isConnected]
+    [isConnected, MULTI_COLLATERAL_ETH_ADDRESS]
   );
 
   const shortCollateralContract = React.useMemo(
     () =>
       isConnected &&
+      MULTI_COLLATERAL_SHORT_ADDRESS &&
       new ethers.Contract(
         MULTI_COLLATERAL_SHORT_ADDRESS,
         MULTI_COLLATERAL_SHORT_ABI,
         wallet.ethersWallet
       ),
-    [isConnected]
+    [isConnected, MULTI_COLLATERAL_SHORT_ADDRESS]
   );
 
   const contracts = {
@@ -287,6 +294,9 @@ export default function() {
 
 function Loan({ loan, contracts }) {
   const [isClosing, setIsClosing] = React.useState(false);
+  const {
+    config: { MULTI_COLLATERAL_TOKEN_CURRENCIES_BY_ADDRESS },
+  } = useWallet();
 
   const close = async (type, id) => {
     try {

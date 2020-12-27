@@ -8,7 +8,6 @@ import wallet from 'utils/wallet';
 import { formatUnits } from 'utils/big-number';
 import sl from 'utils/sl';
 import MULTI_COLLATERAL_ETH_ABI from 'abis/multi-collateral-eth.json';
-import { MULTI_COLLATERAL_ETH_ADDRESS } from 'config';
 
 export const useStyles = makeStyles(theme => ({
   container: {
@@ -50,7 +49,10 @@ export const useStyles = makeStyles(theme => ({
 export default function() {
   const classes = useStyles();
 
-  const { address } = useWallet();
+  const {
+    address,
+    config: { MULTI_COLLATERAL_ETH_ADDRESS },
+  } = useWallet();
   const isConnected = !!address;
 
   const [isLoading, setIsLoading] = React.useState(false);
@@ -62,12 +64,13 @@ export default function() {
   const contract = React.useMemo(
     () =>
       isConnected &&
+      MULTI_COLLATERAL_ETH_ADDRESS &&
       new ethers.Contract(
         MULTI_COLLATERAL_ETH_ADDRESS,
         MULTI_COLLATERAL_ETH_ABI,
         wallet.ethersWallet
       ),
-    [isConnected]
+    [isConnected, MULTI_COLLATERAL_ETH_ADDRESS]
   );
 
   const claim = async () => {

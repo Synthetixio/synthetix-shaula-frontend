@@ -11,6 +11,7 @@ import {
 import MenuIcon from '@material-ui/icons/Menu';
 import { APP_TITLE } from 'config';
 import { useWallet } from 'contexts/wallet';
+import wallet from 'utils/wallet';
 
 const useStyles = makeStyles(theme => ({
   container: {
@@ -65,7 +66,9 @@ export default function Component() {
         {address ? (
           <>
             &nbsp;
-            <div className={classes.account}>{shortAddress}</div>
+            <div className={classes.account}>
+              {shortAddress} ({wallet.getNetworkName().toUpperCase()})
+            </div>
             <Button color="secondary" onClick={disconnect}>
               Disconnect
             </Button>

@@ -14,7 +14,6 @@ const useStyles = makeStyles(theme => ({
 export default function({ isETH, tokenAddress }) {
   const { address } = useWallet();
   const isConnected = !!address;
-
   return isConnected && (isETH ? <ETH /> : <ERC20 {...{ tokenAddress }} />);
 }
 
@@ -58,6 +57,7 @@ function ERC20({ tokenAddress }) {
 
   const contract = React.useMemo(
     () =>
+      tokenAddress &&
       new ethers.Contract(
         tokenAddress,
         ERC20_CONTRACT_ABI,
@@ -73,6 +73,7 @@ function ERC20({ tokenAddress }) {
   };
 
   const onLoad = () => {
+    if (!contract) return () => {};
     // const p =
     new Promise(async (resolve, reject) => {
       try {
@@ -102,7 +103,6 @@ function ERC20({ tokenAddress }) {
   React.useEffect(onLoad, [contract, address]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    contract &&
     symbol &&
     decimals &&
     balance && (

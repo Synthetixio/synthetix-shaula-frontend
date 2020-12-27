@@ -1,11 +1,30 @@
 import React from 'react';
 import wallet from 'utils/wallet';
+import NETWORKS from 'networks.json';
+import clone from 'utils/clone';
 
 const WalletContext = React.createContext(null);
 
 export function WalletProvider({ children }) {
-  const [isLoading, setIsLoading] = React.useState(true);
+  const [isLoaded, setIsLoaded] = React.useState(false);
   const [address, setAddress] = React.useState(null);
+
+  const network = !!address && wallet.getNetworkName();
+  const config = React.useMemo(() => {
+    if (!network) return {};
+
+    const cfg = NETWORKS[network];
+    if (!cfg) return {};
+
+    const MULTI_COLLATERAL_TOKEN_CURRENCIES_BY_ADDRESS = Object.entries(
+      cfg.MULTI_COLLATERAL_TOKEN_CURRENCIES
+    ).reduce((r, [k, v]) => {
+      r[v] = k;
+      return r;
+    }, {});
+
+    return { ...clone(cfg), MULTI_COLLATERAL_TOKEN_CURRENCIES_BY_ADDRESS };
+  }, [network]);
 
   async function connect(tryCached) {
     if (wallet.address) return;
@@ -25,7 +44,7 @@ export function WalletProvider({ children }) {
     // } else {
     //   await wallet.setFallbackProvider();
     // }
-    setIsLoading(false);
+    setIsLoaded(true);
   }
 
   React.useEffect(() => {
@@ -35,10 +54,11 @@ export function WalletProvider({ children }) {
   return (
     <WalletContext.Provider
       value={{
-        isLoading,
+        isLoaded,
         address,
         connect,
         disconnect,
+        config,
       }}
     >
       {children}
@@ -51,12 +71,13 @@ export function useWallet() {
   if (!context) {
     throw new Error('Missing wallet context');
   }
-  const { isLoading, address, connect, disconnect } = context;
+  const { isLoaded, address, connect, disconnect, config } = context;
 
   return {
-    isLoading,
+    isLoaded,
     address,
     connect,
     disconnect,
+    config,
   };
 }

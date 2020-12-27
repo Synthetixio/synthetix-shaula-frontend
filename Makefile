@@ -8,6 +8,10 @@ deploy:
 node_modules:
 	@yarn
 
+gen-net-cfg:
+	@node bin/networks.js 
+
 .PHONY: \
 	run \
-	deploy
+	deploy \
+	gen-net-cfg
