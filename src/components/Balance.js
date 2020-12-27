@@ -23,7 +23,8 @@ function ETH() {
   const [balance, setBalance] = React.useState(ethers.BigNumber.from('0'));
 
   const loadBalance = () => {
-    const p = new Promise(async (resolve, reject) => {
+    // const p = ;
+    new Promise(async (resolve, reject) => {
       try {
         setBalance(await wallet.ethersWallet.getBalance());
         resolve();
@@ -33,7 +34,7 @@ function ETH() {
     });
 
     return () => {
-      p.cancel();
+      // p.cancel();
     };
   };
 
@@ -48,7 +49,7 @@ function ETH() {
   );
 }
 
-function ERC20({ isETH, tokenAddress }) {
+function ERC20({ tokenAddress }) {
   const classes = useStyles();
   const [balance, setBalance] = React.useState(ethers.BigNumber.from('0'));
   const [decimals, setDecimals] = React.useState(null);
@@ -75,9 +76,14 @@ function ERC20({ isETH, tokenAddress }) {
     // const p =
     new Promise(async (resolve, reject) => {
       try {
-        setDecimals(await contract.decimals());
-        setSymbol(await contract.symbol());
-        setBalance(await contract.balanceOf(address));
+        const [decimals, symbol, balance] = await Promise.all([
+          contract.decimals(),
+          contract.symbol(),
+          contract.balanceOf(address),
+        ]);
+        setDecimals(decimals);
+        setSymbol(symbol);
+        setBalance(balance);
         resolve();
       } catch (e) {
         reject(e);

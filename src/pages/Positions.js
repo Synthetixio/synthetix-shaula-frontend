@@ -20,7 +20,6 @@ import COLLATERAL_STATE_ABI from 'abis/collateral-state.json';
 import MULTI_COLLATERAL_ERC20_ABI from 'abis/multi-collateral-erc20.json';
 import MULTI_COLLATERAL_ETH_ABI from 'abis/multi-collateral-eth.json';
 import MULTI_COLLATERAL_SHORT_ABI from 'abis/multi-collateral-short.json';
-
 import {
   ERC20_COLLATERAL_STATE_ADDRESS,
   ETH_COLLATERAL_STATE_ADDRESS,
@@ -38,7 +37,7 @@ export const useStyles = makeStyles(theme => ({
     borderRadius: 8,
     flex: 1,
     '& button': {
-      width: '100%',
+      width: 100,
       fontFamily: 'GT-America-Compressed-Regular',
     },
     [theme.breakpoints.down('sm')]: {
@@ -208,15 +207,6 @@ export default function() {
     setIsLoading(false);
   };
 
-  const close = async (type, id) => {
-    try {
-      await contracts[type].close(id);
-      sl('info', 'Waiting for transaction to be mined.', 'Done');
-    } catch (e) {
-      sl('error', e);
-    }
-  };
-
   // subscribe to loan open+close
   const subscribe = () => {
     if (
@@ -284,39 +274,7 @@ export default function() {
               </TableHead>
               <TableBody>
                 {loans.map(loan => (
-                  <TableRow key={loan.id.toString()}>
-                    <TableCell component="th" scope="row">
-                      {loan.id.toString()}
-                    </TableCell>
-                    <TableCell>
-                      {moment
-                        .unix(loan.lastInteraction.toNumber())
-                        .local()
-                        .format('YYYY-MM-DD HH:mm')}
-                    </TableCell>
-                    <TableCell>{loan.short ? 'short' : 'long'}</TableCell>
-                    <TableCell>-</TableCell>
-                    <TableCell>
-                      {formatUnits(loan.amount, 18)}{' '}
-                      {
-                        MULTI_COLLATERAL_TOKEN_CURRENCIES_BY_ADDRESS[
-                          loan.currency
-                        ]
-                      }
-                    </TableCell>
-                    <TableCell>
-                      {formatUnits(loan.accruedInterest, 18)}
-                    </TableCell>
-                    <TableCell align="right">
-                      <Button
-                        color="secondary"
-                        variant="outlined"
-                        onClick={() => close(loan.type, loan.id)}
-                      >
-                        CLOSE
-                      </Button>{' '}
-                    </TableCell>
-                  </TableRow>
+                  <Loan key={loan.id.toString()} {...{ loan, contracts }} />
                 ))}
               </TableBody>
             </Table>
@@ -324,5 +282,53 @@ export default function() {
         </div>
       </div>
     </Paper>
+  );
+}
+
+function Loan({ loan, contracts }) {
+  const [isClosing, setIsClosing] = React.useState(false);
+
+  const close = async (type, id) => {
+    try {
+      setIsClosing(true);
+      const tx = await contracts[type].close(id);
+      sl('info', 'Waiting for transaction to be mined.', 'Done');
+      await tx.wait();
+    } catch (e) {
+      sl('error', e);
+    } finally {
+      setIsClosing(false);
+    }
+  };
+
+  return (
+    <TableRow>
+      <TableCell component="th" scope="row">
+        {loan.id.toString()}
+      </TableCell>
+      <TableCell>
+        {moment
+          .unix(loan.lastInteraction.toNumber())
+          .local()
+          .format('YYYY-MM-DD HH:mm')}
+      </TableCell>
+      <TableCell>{loan.short ? 'short' : 'long'}</TableCell>
+      <TableCell>-</TableCell>
+      <TableCell>
+        {formatUnits(loan.amount, 18)}{' '}
+        {MULTI_COLLATERAL_TOKEN_CURRENCIES_BY_ADDRESS[loan.currency]}
+      </TableCell>
+      <TableCell>{formatUnits(loan.accruedInterest, 18)}</TableCell>
+      <TableCell align="right">
+        <Button
+          color="secondary"
+          variant="outlined"
+          onClick={() => close(loan.type, loan.id)}
+          disabled={isClosing}
+        >
+          {isClosing ? 'CLOSING...' : 'CLOSE'}
+        </Button>{' '}
+      </TableCell>
+    </TableRow>
   );
 }
