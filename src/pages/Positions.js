@@ -189,6 +189,11 @@ export default function() {
         });
       }
     }
+    loans.sort((a, b) => {
+      if (a.id.gt(b.id)) return -1;
+      if (a.id.lt(b.id)) return 1;
+      return 0;
+    });
     setLoans(loans);
     setIsLoading(false);
   };

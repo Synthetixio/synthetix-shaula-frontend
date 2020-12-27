@@ -16,6 +16,8 @@ import Positions from './Positions';
 
 const history = createHashHistory();
 
+const MARGIN = 14;
+
 const useStyles = makeStyles(theme => ({
   container: {
     width: '960px',
@@ -28,17 +30,17 @@ const useStyles = makeStyles(theme => ({
     },
   },
   types: {
-    marginBottom: 15,
+    marginBottom: MARGIN,
     // margin: '20px 15px',
     // [theme.breakpoints.down('sm')]: {
     //   margin: '20px 5px',
     // },
   },
   ml: {
-    marginLeft: 7.5,
+    marginLeft: MARGIN / 2,
   },
   mr: {
-    marginRight: 7.5,
+    marginRight: MARGIN / 2,
   },
 }));
 
