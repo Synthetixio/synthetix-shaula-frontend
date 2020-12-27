@@ -6,6 +6,7 @@ import ERC20_CONTRACT_ABI from 'abis/erc20.json';
 import { formatUnits } from 'utils/big-number';
 import { useWallet } from 'contexts/wallet';
 import wallet from 'utils/wallet';
+import sleep from 'utils/sleep';
 
 const useStyles = makeStyles(theme => ({
   container: {},
@@ -21,23 +22,18 @@ function ETH() {
   const classes = useStyles();
   const [balance, setBalance] = React.useState(ethers.BigNumber.from('0'));
 
-  const loadBalance = () => {
-    // const p = ;
-    new Promise(async (resolve, reject) => {
-      try {
-        setBalance(await wallet.ethersWallet.getBalance());
-        resolve();
-      } catch (e) {
-        reject(e);
-      }
-    });
-
-    return () => {
-      // p.cancel();
-    };
+  const load = async () => {
+    setBalance(await wallet.ethersWallet.getBalance());
   };
 
-  React.useEffect(loadBalance, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const subscribe = () => {
+    return () => {};
+  };
+
+  React.useEffect(() => {
+    load();
+    return subscribe(); // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     balance && (
@@ -68,39 +64,36 @@ function ERC20({ tokenAddress }) {
 
   const onBalanceChange = async (from, to) => {
     if (from === address || to === address) {
+      await sleep(1000);
       setBalance(await contract.balanceOf(address));
     }
   };
 
-  const onLoad = () => {
+  const load = async () => {
+    if (!contract) return;
+    const [decimals, symbol, balance] = await Promise.all([
+      contract.decimals(),
+      contract.symbol(),
+      contract.balanceOf(address),
+    ]);
+    setDecimals(decimals);
+    setSymbol(symbol);
+    setBalance(balance);
+  };
+
+  const subscribe = () => {
     if (!contract) return () => {};
-    // const p =
-    new Promise(async (resolve, reject) => {
-      try {
-        const [decimals, symbol, balance] = await Promise.all([
-          contract.decimals(),
-          contract.symbol(),
-          contract.balanceOf(address),
-        ]);
-        setDecimals(decimals);
-        setSymbol(symbol);
-        setBalance(balance);
-        resolve();
-      } catch (e) {
-        reject(e);
-      }
-    });
     const transferEvent = contract.filters.Transfer();
     contract.on(transferEvent, onBalanceChange);
     return () => {
-      // if (!p.isCancellable) {
-      //   p.cancel();
-      // }
       contract.off(transferEvent, onBalanceChange);
     };
   };
 
-  React.useEffect(onLoad, [contract, address]); // eslint-disable-line react-hooks/exhaustive-deps
+  React.useEffect(() => {
+    load();
+    return subscribe(); // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [contract]);
 
   return (
     symbol &&

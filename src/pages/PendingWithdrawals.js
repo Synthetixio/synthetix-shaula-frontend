@@ -7,6 +7,7 @@ import Loader from 'components/Loader';
 import wallet from 'utils/wallet';
 import { formatUnits } from 'utils/big-number';
 import sl from 'utils/sl';
+import sleep from 'utils/sleep';
 import MULTI_COLLATERAL_ETH_ABI from 'abis/multi-collateral-eth.json';
 
 export const useStyles = makeStyles(theme => ({
@@ -76,7 +77,7 @@ export default function() {
   const claim = async () => {
     try {
       setIsClaiming(true);
-      const tx = await contract.eth.claim(
+      const tx = await contract.claim(
         await contract.pendingWithdrawals(address)
       );
       await tx.wait();
@@ -88,6 +89,8 @@ export default function() {
         )} ETH.`,
         'Done!'
       );
+      await sleep(1000);
+      setPendingWithdrawals(await contract.pendingWithdrawals(address));
     } catch (e) {
       sl('error', e);
     } finally {
@@ -102,19 +105,8 @@ export default function() {
     setIsLoading(false);
   };
 
-  // subscribe to pending withdrawls amount
-  const subscribe = () => {
-    if (!contract) return () => {};
-    // const changeEvent = '';
-    // contract.off(changeEvent, onChange);
-    return () => {
-      // contract.off(changeEvent, onChange);
-    };
-  };
-
   React.useEffect(() => {
-    load();
-    return subscribe(); // eslint-disable-next-line react-hooks/exhaustive-deps
+    load(); // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [contract]);
 
   return !contract ? null : (
