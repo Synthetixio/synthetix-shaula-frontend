@@ -13,8 +13,8 @@ import {
 } from '@material-ui/core';
 import { useWallet } from 'contexts/wallet';
 import Loader from 'components/Loader';
-import wallet from 'utils/wallet';
 import { formatUnits } from 'utils/big-number';
+import { useNotification } from 'contexts/notifications';
 import sl from 'utils/sl';
 import COLLATERAL_STATE_ABI from 'abis/collateral-state.json';
 import MULTI_COLLATERAL_ERC20_ABI from 'abis/multi-collateral-erc20.json';
@@ -61,6 +61,7 @@ export default function() {
   const classes = useStyles();
 
   const {
+    signer,
     address,
     config: {
       ERC20_COLLATERAL_STATE_ADDRESS,
@@ -71,81 +72,80 @@ export default function() {
       MULTI_COLLATERAL_SHORT_ADDRESS,
     },
   } = useWallet();
-  const isConnected = !!address;
 
   const [isLoading, setIsLoading] = React.useState(false);
   const [loans, setLoans] = React.useState([]);
 
   const erc20CollateralStateContract = React.useMemo(
     () =>
-      isConnected &&
+      signer &&
       ERC20_COLLATERAL_STATE_ADDRESS &&
       new ethers.Contract(
         ERC20_COLLATERAL_STATE_ADDRESS,
         COLLATERAL_STATE_ABI,
-        wallet.ethersWallet
+        signer
       ),
-    [isConnected, ERC20_COLLATERAL_STATE_ADDRESS]
+    [signer, ERC20_COLLATERAL_STATE_ADDRESS]
   );
 
   const ethCollateralStateContract = React.useMemo(
     () =>
-      isConnected &&
+      signer &&
       ETH_COLLATERAL_STATE_ADDRESS &&
       new ethers.Contract(
         ETH_COLLATERAL_STATE_ADDRESS,
         COLLATERAL_STATE_ABI,
-        wallet.ethersWallet
+        signer
       ),
-    [isConnected, ETH_COLLATERAL_STATE_ADDRESS]
+    [signer, ETH_COLLATERAL_STATE_ADDRESS]
   );
 
   const shortCollateralStateContract = React.useMemo(
     () =>
-      isConnected &&
+      signer &&
       SHORT_COLLATERAL_STATE_ADDRESS &&
       new ethers.Contract(
         SHORT_COLLATERAL_STATE_ADDRESS,
         COLLATERAL_STATE_ABI,
-        wallet.ethersWallet
+        signer
       ),
-    [isConnected, SHORT_COLLATERAL_STATE_ADDRESS]
+    [signer, SHORT_COLLATERAL_STATE_ADDRESS]
   );
 
   const erc20CollateralContract = React.useMemo(
     () =>
-      isConnected &&
+      signer &&
       MULTI_COLLATERAL_ERC20_ADDRESS &&
       new ethers.Contract(
         MULTI_COLLATERAL_ERC20_ADDRESS,
         MULTI_COLLATERAL_ERC20_ABI,
-        wallet.ethersWallet
+        signer
       ),
-    [isConnected, MULTI_COLLATERAL_ERC20_ADDRESS]
+    [signer, MULTI_COLLATERAL_ERC20_ADDRESS]
   );
 
   const ethCollateralContract = React.useMemo(
     () =>
-      isConnected &&
+      signer &&
       MULTI_COLLATERAL_ETH_ADDRESS &&
       new ethers.Contract(
         MULTI_COLLATERAL_ETH_ADDRESS,
         MULTI_COLLATERAL_ETH_ABI,
-        wallet.ethersWallet
+        signer
       ),
-    [isConnected, MULTI_COLLATERAL_ETH_ADDRESS]
+    [signer, MULTI_COLLATERAL_ETH_ADDRESS]
   );
 
   const shortCollateralContract = React.useMemo(
     () =>
-      isConnected &&
+      signer &&
       MULTI_COLLATERAL_SHORT_ADDRESS &&
       new ethers.Contract(
         MULTI_COLLATERAL_SHORT_ADDRESS,
         MULTI_COLLATERAL_SHORT_ABI,
-        wallet.ethersWallet
+        signer
       ),
-    [isConnected, MULTI_COLLATERAL_SHORT_ADDRESS]
+    [signer, MULTI_COLLATERAL_SHORT_ADDRESS]
   );
 
   const contracts = {
@@ -254,7 +254,7 @@ export default function() {
     shortCollateralStateContract,
   ]);
 
-  return !isConnected ? null : (
+  return !signer ? null : (
     <Paper className={classes.container}>
       <div className={classes.content}>
         <div className={classes.heading}>Loans</div>
@@ -297,12 +297,13 @@ function Loan({ loan, contracts }) {
   const {
     config: { MULTI_COLLATERAL_TOKEN_CURRENCIES_BY_ADDRESS },
   } = useWallet();
+  const { showNotification } = useNotification();
 
-  const close = async (type, id) => {
+  const close = async () => {
     try {
       setIsClosing(true);
-      const tx = await contracts[type].close(id);
-      sl('success', 'Waiting for transaction to be mined.', 'Done!');
+      const tx = await contracts[loan.type].close(loan.id);
+      showNotification(`Closing loan(#${loan.id.toString()})`, tx.hash);
       await tx.wait();
     } catch (e) {
       sl('error', e);
@@ -333,7 +334,7 @@ function Loan({ loan, contracts }) {
         <Button
           color="secondary"
           variant="outlined"
-          onClick={() => close(loan.type, loan.id)}
+          onClick={close}
           disabled={isClosing}
         >
           {isClosing ? 'CLOSING...' : 'CLOSE'}

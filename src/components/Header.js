@@ -1,6 +1,5 @@
 import React from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import { Link } from 'react-router-dom';
 import {
   IconButton,
   AppBar,
@@ -11,7 +10,6 @@ import {
 import MenuIcon from '@material-ui/icons/Menu';
 import { APP_TITLE } from 'config';
 import { useWallet } from 'contexts/wallet';
-import wallet from 'utils/wallet';
 
 const useStyles = makeStyles(theme => ({
   container: {
@@ -39,7 +37,7 @@ const useStyles = makeStyles(theme => ({
 
 export default function Component() {
   const classes = useStyles();
-  const { address, connect, disconnect } = useWallet();
+  const { address, connect, disconnect, network } = useWallet();
 
   const shortAddress =
     address && `${address.slice(0, 6)}....${address.slice(-4)}`;
@@ -51,8 +49,6 @@ export default function Component() {
           edge="start"
           color="inherit"
           aria-label="menu"
-          to={'/'}
-          component={Link}
           className={classes.backToHome}
         >
           <MenuIcon />
@@ -67,7 +63,7 @@ export default function Component() {
           <>
             &nbsp;
             <div className={classes.account}>
-              {shortAddress} ({wallet.getNetworkName().toUpperCase()})
+              {shortAddress} ({network.toUpperCase()})
             </div>
             <Button color="secondary" onClick={disconnect}>
               Disconnect

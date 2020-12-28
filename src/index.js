@@ -4,8 +4,8 @@ import './styles';
 import React from 'react';
 import { render } from 'react-dom';
 import * as serviceWorker from './serviceWorker';
-import { ThemeProvider } from 'contexts/theme';
 import { WalletProvider } from 'contexts/wallet';
+import { NotificationsProvider } from 'contexts/notifications';
 
 import App from 'pages/App';
 
@@ -18,9 +18,9 @@ import App from 'pages/App';
 
   render(
     <WalletProvider>
-      <ThemeProvider>
+      <NotificationsProvider>
         <App />
-      </ThemeProvider>
+      </NotificationsProvider>
     </WalletProvider>,
     document.getElementById('root')
   );

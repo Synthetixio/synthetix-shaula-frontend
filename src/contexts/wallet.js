@@ -59,6 +59,8 @@ export function WalletProvider({ children }) {
         connect,
         disconnect,
         config,
+        network,
+        signer: wallet.ethersWallet,
       }}
     >
       {children}
@@ -71,7 +73,15 @@ export function useWallet() {
   if (!context) {
     throw new Error('Missing wallet context');
   }
-  const { isLoaded, address, connect, disconnect, config } = context;
+  const {
+    isLoaded,
+    address,
+    connect,
+    disconnect,
+    config,
+    network,
+    signer,
+  } = context;
 
   return {
     isLoaded,
@@ -79,5 +89,7 @@ export function useWallet() {
     connect,
     disconnect,
     config,
+    network,
+    signer,
   };
 }

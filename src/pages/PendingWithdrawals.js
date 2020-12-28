@@ -4,11 +4,11 @@ import { makeStyles } from '@material-ui/core/styles';
 import { Paper, Button } from '@material-ui/core';
 import { useWallet } from 'contexts/wallet';
 import Loader from 'components/Loader';
-import wallet from 'utils/wallet';
 import { formatUnits } from 'utils/big-number';
 import sl from 'utils/sl';
 import sleep from 'utils/sleep';
 import MULTI_COLLATERAL_ETH_ABI from 'abis/multi-collateral-eth.json';
+import { useNotification } from 'contexts/notifications';
 
 export const useStyles = makeStyles(theme => ({
   container: {
@@ -49,12 +49,13 @@ export const useStyles = makeStyles(theme => ({
 
 export default function() {
   const classes = useStyles();
+  const { showNotification } = useNotification();
 
   const {
+    signer,
     address,
     config: { MULTI_COLLATERAL_ETH_ADDRESS },
   } = useWallet();
-  const isConnected = !!address;
 
   const [isLoading, setIsLoading] = React.useState(false);
   const [isClaiming, setIsClaiming] = React.useState(false);
@@ -64,14 +65,14 @@ export default function() {
 
   const contract = React.useMemo(
     () =>
-      isConnected &&
+      signer &&
       MULTI_COLLATERAL_ETH_ADDRESS &&
       new ethers.Contract(
         MULTI_COLLATERAL_ETH_ADDRESS,
         MULTI_COLLATERAL_ETH_ABI,
-        wallet.ethersWallet
+        signer
       ),
-    [isConnected, MULTI_COLLATERAL_ETH_ADDRESS]
+    [signer, MULTI_COLLATERAL_ETH_ADDRESS]
   );
 
   const claim = async () => {
@@ -79,6 +80,10 @@ export default function() {
       setIsClaiming(true);
       const tx = await contract.claim(
         await contract.pendingWithdrawals(address)
+      );
+      showNotification(
+        `Withdrawing ${formatUnits(pendingWithdrawals, 18)} ETH`,
+        tx.hash
       );
       await tx.wait();
       sl(

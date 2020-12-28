@@ -5,7 +5,6 @@ import { makeStyles } from '@material-ui/core/styles';
 import ERC20_CONTRACT_ABI from 'abis/erc20.json';
 import { formatUnits } from 'utils/big-number';
 import { useWallet } from 'contexts/wallet';
-import wallet from 'utils/wallet';
 import sleep from 'utils/sleep';
 
 const useStyles = makeStyles(theme => ({
@@ -13,17 +12,17 @@ const useStyles = makeStyles(theme => ({
 }));
 
 export default function({ isETH, tokenAddress }) {
-  const { address } = useWallet();
-  const isConnected = !!address;
-  return isConnected && (isETH ? <ETH /> : <ERC20 {...{ tokenAddress }} />);
+  const { signer } = useWallet();
+  return !signer ? null : isETH ? <ETH /> : <ERC20 {...{ tokenAddress }} />;
 }
 
 function ETH() {
   const classes = useStyles();
+  const { signer } = useWallet();
   const [balance, setBalance] = React.useState(ethers.BigNumber.from('0'));
 
   const load = async () => {
-    setBalance(await wallet.ethersWallet.getBalance());
+    setBalance(await signer.getBalance());
   };
 
   const subscribe = () => {
@@ -49,17 +48,14 @@ function ERC20({ tokenAddress }) {
   const [balance, setBalance] = React.useState(ethers.BigNumber.from('0'));
   const [decimals, setDecimals] = React.useState(null);
   const [symbol, setSymbol] = React.useState(null);
-  const { address } = useWallet();
+  const { address, signer } = useWallet();
 
   const contract = React.useMemo(
     () =>
+      signer &&
       tokenAddress &&
-      new ethers.Contract(
-        tokenAddress,
-        ERC20_CONTRACT_ABI,
-        wallet.ethersWallet
-      ),
-    [tokenAddress]
+      new ethers.Contract(tokenAddress, ERC20_CONTRACT_ABI, signer),
+    [tokenAddress, signer]
   );
 
   const onBalanceChange = async (from, to) => {

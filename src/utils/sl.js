@@ -6,7 +6,8 @@ import Promise from 'bluebird';
 const noop = () => {};
 
 const notify = (type, msg, title, done = noop, moreOpts = {}) => {
-  if ('error' === type) msg = msg.responseText || msg.message || msg;
+  if ('error' === type)
+    msg = msg?.error?.message || msg.responseText || msg.message || msg;
 
   const opts = {
     title: title || type.toUpperCase() + '!',
