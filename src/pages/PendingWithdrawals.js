@@ -5,10 +5,9 @@ import { Paper, Button } from '@material-ui/core';
 import { useWallet } from 'contexts/wallet';
 import Loader from 'components/Loader';
 import { formatUnits } from 'utils/big-number';
-import sl from 'utils/sl';
 import sleep from 'utils/sleep';
 import MULTI_COLLATERAL_ETH_ABI from 'abis/multi-collateral-eth.json';
-import { useNotification } from 'contexts/notifications';
+import { useNotifications } from 'contexts/notifications';
 
 export const useStyles = makeStyles(theme => ({
   container: {
@@ -49,7 +48,17 @@ export const useStyles = makeStyles(theme => ({
 
 export default function() {
   const classes = useStyles();
-  const { showNotification } = useNotification();
+  const {
+    showTxNotification,
+    showErrorNotification,
+    showSuccessNotification,
+  } = useNotifications();
+
+  // React.useEffect(() => {
+  //   showTxNotification('Approve UNI', '3');
+  //   showErrorNotification(new Error('oh no'));
+  //   showSuccessNotification('Done', 'Approved UNI');
+  // }, [showTxNotification]);
 
   const {
     signer,
@@ -81,23 +90,22 @@ export default function() {
       const tx = await contract.claim(
         await contract.pendingWithdrawals(address)
       );
-      showNotification(
+      showTxNotification(
         `Withdrawing ${formatUnits(pendingWithdrawals, 18)} ETH`,
         tx.hash
       );
       await tx.wait();
-      sl(
-        'success',
+      showSuccessNotification(
+        'Done',
         `You have successfully withdrawn ${formatUnits(
           pendingWithdrawals,
           18
-        )} ETH.`,
-        'Done!'
+        )} ETH.`
       );
       await sleep(1000);
       setPendingWithdrawals(await contract.pendingWithdrawals(address));
     } catch (e) {
-      sl('error', e);
+      showErrorNotification(e);
     } finally {
       setIsClaiming(false);
     }

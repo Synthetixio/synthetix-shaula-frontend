@@ -1,18 +1,12 @@
 import React from 'react';
 import clsx from 'clsx';
-import {
-  ThemeProvider as MuiThemeProvider,
-  makeStyles,
-} from '@material-ui/core/styles';
-import { CssBaseline } from '@material-ui/core';
-import muiTheme from 'utils/theme';
+import { makeStyles } from '@material-ui/core/styles';
 
 import Header from 'components/Header';
 import Borrow from './Borrow';
 import Short from './Short';
 import Positions from './Positions';
 import PendingWithdrawals from './PendingWithdrawals';
-import Notification from './Notification';
 
 const MARGIN = 14;
 
@@ -54,32 +48,28 @@ export default function App() {
   const classes = useStyles();
 
   return (
-    <MuiThemeProvider theme={muiTheme}>
-      <CssBaseline />
-      <div className={classes.container}>
-        <Header />
-        <div
-          className={clsx(
-            classes.types,
-            classes.mb,
-            'flex flex-grow justify-space'
-          )}
-        >
-          <div className={clsx(classes.mr, 'flex', 'flex-grow')}>
-            <Borrow />
-          </div>
-          <div className={clsx(classes.ml, 'flex', 'flex-grow')}>
-            <Short />
-          </div>
+    <div className={classes.container}>
+      <Header />
+      <div
+        className={clsx(
+          classes.types,
+          classes.mb,
+          'flex flex-grow justify-space'
+        )}
+      >
+        <div className={clsx(classes.mr, 'flex', 'flex-grow')}>
+          <Borrow />
         </div>
-        <div className={clsx(classes.mb)}>
-          <PendingWithdrawals />
-        </div>
-        <div className={clsx(classes.mb)}>
-          <Positions />
+        <div className={clsx(classes.ml, 'flex', 'flex-grow')}>
+          <Short />
         </div>
       </div>
-      <Notification />
-    </MuiThemeProvider>
+      <div className={clsx(classes.mb)}>
+        <PendingWithdrawals />
+      </div>
+      <div className={clsx(classes.mb)}>
+        <Positions />
+      </div>
+    </div>
   );
 }

@@ -14,8 +14,7 @@ import {
 import { useWallet } from 'contexts/wallet';
 import Loader from 'components/Loader';
 import { formatUnits } from 'utils/big-number';
-import { useNotification } from 'contexts/notifications';
-import sl from 'utils/sl';
+import { useNotifications } from 'contexts/notifications';
 import COLLATERAL_STATE_ABI from 'abis/collateral-state.json';
 import MULTI_COLLATERAL_ERC20_ABI from 'abis/multi-collateral-erc20.json';
 import MULTI_COLLATERAL_ETH_ABI from 'abis/multi-collateral-eth.json';
@@ -297,16 +296,16 @@ function Loan({ loan, contracts }) {
   const {
     config: { MULTI_COLLATERAL_TOKEN_CURRENCIES_BY_ADDRESS },
   } = useWallet();
-  const { showNotification } = useNotification();
+  const { showTxNotification, showErrorNotification } = useNotifications();
 
   const close = async () => {
     try {
       setIsClosing(true);
       const tx = await contracts[loan.type].close(loan.id);
-      showNotification(`Closing loan(#${loan.id.toString()})`, tx.hash);
+      showTxNotification(`Closing loan(#${loan.id.toString()})`, tx.hash);
       await tx.wait();
     } catch (e) {
-      sl('error', e);
+      showErrorNotification(e);
     } finally {
       setIsClosing(false);
     }

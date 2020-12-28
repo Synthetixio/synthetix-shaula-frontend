@@ -24,6 +24,11 @@ export default createMuiTheme({
         borderRadius: BORDER_RADIUS,
       },
     },
+    MuiPaper: {
+      paper: {
+        borderRadius: BORDER_RADIUS,
+      },
+    },
     MuiDialog: {
       paper: {
         borderRadius: BORDER_RADIUS,

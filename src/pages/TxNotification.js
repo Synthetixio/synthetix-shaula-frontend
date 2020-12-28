@@ -6,7 +6,7 @@ import {
   ArrowUpward as SubmittedIcon,
   Close as CloseIcon,
 } from '@material-ui/icons';
-import { useNotification } from 'contexts/notifications';
+import { useNotifications } from 'contexts/notifications';
 import { useWallet } from 'contexts/wallet';
 
 const useStyles = makeStyles(theme => ({
@@ -47,7 +47,7 @@ const useStyles = makeStyles(theme => ({
 
 export default function() {
   const classes = useStyles();
-  const { notification, clearNotification } = useNotification();
+  const { notification, clearNotification } = useNotifications();
   const { network } = useWallet();
 
   return (

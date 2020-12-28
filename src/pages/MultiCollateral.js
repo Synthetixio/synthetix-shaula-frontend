@@ -10,7 +10,7 @@ import ERC20_CONTRACT_ABI from 'abis/erc20.json';
 import MULTI_COLLATERAL_ERC20_ABI from 'abis/multi-collateral-erc20.json';
 import MULTI_COLLATERAL_ETH_ABI from 'abis/multi-collateral-eth.json';
 import MULTI_COLLATERAL_SHORT_ABI from 'abis/multi-collateral-short.json';
-import { useNotification } from 'contexts/notifications';
+import { useNotifications } from 'contexts/notifications';
 
 export const useStyles = makeStyles(theme => ({
   container: {
@@ -62,7 +62,7 @@ export default function({ collateralAssets, targetAssetsFilter, short }) {
   const classes = useStyles();
   const label = short ? 'Short' : 'Borrow';
 
-  const { showNotification } = useNotification();
+  const { showTxNotification, showErrorNotification } = useNotifications();
 
   const {
     signer,
@@ -207,11 +207,12 @@ export default function({ collateralAssets, targetAssetsFilter, short }) {
         multiCollateralAddress,
         collateralAmount
       );
-      showNotification(`Approving ${collateralName}`, tx.hash);
+      showTxNotification(`Approving ${collateralName}`, tx.hash);
       await tx.wait();
+      showTxNotification(`Approved ${collateralName}`, tx.hash);
       await checkCollateralAllowance();
     } catch (e) {
-      sl('error', e);
+      showErrorNotification(e);
     } finally {
       setIsApproving(false);
     }
@@ -220,7 +221,7 @@ export default function({ collateralAssets, targetAssetsFilter, short }) {
   const trade = async () => {
     try {
       if (targetAmount.isZero()) {
-        return sl('error', `Enter ${targetName} amount..`);
+        return showErrorNotification(`Enter ${targetName} amount..`);
       }
       setIsTrading(true);
       const tx = await (collateralIsETH
@@ -234,7 +235,7 @@ export default function({ collateralAssets, targetAssetsFilter, short }) {
             targetAmount,
             MULTI_COLLATERAL_TOKEN_CURRENCIES[targetName]
           ));
-      showNotification(
+      showTxNotification(
         `${label}ing ${formatUnits(
           targetAmount,
           targetDecimals
@@ -242,8 +243,12 @@ export default function({ collateralAssets, targetAssetsFilter, short }) {
         tx.hash
       );
       await tx.wait();
+      showTxNotification(
+        `${label}ed ${formatUnits(targetAmount, targetDecimals)} ${targetName}`,
+        tx.hash
+      );
     } catch (e) {
-      sl('error', e);
+      showErrorNotification(e);
     } finally {
       setIsTrading(false);
     }
