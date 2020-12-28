@@ -26,7 +26,11 @@ function ETH() {
   };
 
   const subscribe = () => {
-    return () => {};
+    const eventName = 'block';
+    signer.provider.on(eventName, load);
+    return () => {
+      signer.provider.off(eventName, load);
+    };
   };
 
   React.useEffect(() => {
