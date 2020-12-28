@@ -25,6 +25,7 @@ const useStyles = makeStyles(theme => ({
       padding: '10px 0',
       marginTop: 20,
       fontSize: 18,
+      fontFamily: 'GT-America-Extended-Bold, "Work Sans", Arial',
     },
   },
   arrow: {
