@@ -3,10 +3,7 @@ import Onboard from 'bnc-onboard';
 import { BLOCKNATIVE_KEY, INFURA_ID, CACHE_WALLET_KEY } from 'config';
 import cache from 'utils/cache';
 
-const onboard = Onboard({
-  dappId: BLOCKNATIVE_KEY,
-  networkId: 1,
-});
+const DEFAULT_NETWORK_ID = 1;
 
 class Wallet {
   async connect(tryCached = false) {
@@ -15,6 +12,11 @@ class Wallet {
       cachedWallet = cache(CACHE_WALLET_KEY);
       if (!cachedWallet) return;
     }
+
+    const onboard = Onboard({
+      dappId: BLOCKNATIVE_KEY,
+      networkId: await getDefaultNetworkId(),
+    });
 
     if (
       !(cachedWallet
@@ -60,10 +62,26 @@ class Wallet {
     cache(CACHE_WALLET_KEY, null);
   }
 
-  getIsCached() {}
-
   getNetworkName() {
     return ~['homestead'].indexOf(this.net.name) ? 'mainnet' : this.net.name; // todo
+  }
+}
+
+// https://github.com/Synthetixio/staking/blob/c42ac534ba774d83caca183a52348c8b6260fcf4/utils/network.ts#L5
+async function getDefaultNetworkId() {
+  try {
+    if (window?.web3?.eth?.net) {
+      const networkId = await window.web3.eth.net.getId();
+      return Number(networkId);
+    } else if (window?.web3?.version?.network) {
+      return Number(window?.web3.version.network);
+    } else if (window?.ethereum?.networkVersion) {
+      return Number(window?.ethereum?.networkVersion);
+    }
+    return DEFAULT_NETWORK_ID;
+  } catch (e) {
+    console.log(e);
+    return DEFAULT_NETWORK_ID;
   }
 }
 
