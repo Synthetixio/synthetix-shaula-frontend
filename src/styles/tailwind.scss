@@ -1,5 +1,3 @@
-// mimic tailwind
-
 .flex {
   display: flex;
 }
@@ -46,4 +44,34 @@
 
 .hidden {
   display: none;
+}
+
+.text-align {
+  text-align: left;
+}
+
+.text-align {
+  text-align: right;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.line-through {
+  text-decoration: line-through;
+}
+
+.cursor-pointer {
+  cursor: pointer;
 }

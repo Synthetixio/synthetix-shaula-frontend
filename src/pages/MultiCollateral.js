@@ -4,7 +4,6 @@ import { makeStyles } from '@material-ui/core/styles';
 import { Paper, Select, MenuItem, TextField, Button } from '@material-ui/core';
 import { useWallet } from 'contexts/wallet';
 import { formatUnits } from 'utils/big-number';
-import sl from 'utils/sl';
 import Balance from 'components/Balance';
 import ERC20_CONTRACT_ABI from 'abis/erc20.json';
 import MULTI_COLLATERAL_ERC20_ABI from 'abis/multi-collateral-erc20.json';
@@ -189,8 +188,7 @@ export default function({ collateralAssets, targetAssetsFilter, short }) {
       );
     }
     if (collateralAmount.lt(minCollateral)) {
-      return sl(
-        'error',
+      return showErrorNotification(
         `Minimum collateral is ${formatUnits(
           minCollateral,
           collateralDecimals

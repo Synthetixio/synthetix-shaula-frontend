@@ -1,9 +1,7 @@
 import { ethers } from 'ethers';
 import Onboard from 'bnc-onboard';
 import { BLOCKNATIVE_KEY, INFURA_ID, CACHE_WALLET_KEY } from 'config';
-import { slPrompt } from 'utils/sl';
 import cache from 'utils/cache';
-import NETWORKS from 'networks.json';
 
 const onboard = Onboard({
   dappId: BLOCKNATIVE_KEY,
@@ -55,14 +53,6 @@ class Wallet {
   async setProvider(provider) {
     this.ethersProvider = provider;
     this.net = await this.ethersProvider.getNetwork();
-
-    if (!(this.getNetworkName() in NETWORKS)) {
-      return await slPrompt(
-        'Wrong network',
-        `Please connect to ${Object.keys(NETWORKS).join('/')}`,
-        () => window.location.reload()
-      );
-    }
   }
 
   async disconnect() {

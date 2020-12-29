@@ -1,4 +1,3 @@
-import 'nprogress/nprogress.css';
 import './styles';
 
 import React from 'react';

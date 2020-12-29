@@ -7,6 +7,7 @@ import Borrow from './Borrow';
 import Short from './Short';
 import Positions from './Positions';
 import PendingWithdrawals from './PendingWithdrawals';
+import WrongNetwork from './WrongNetwork';
 
 const MARGIN = 14;
 
@@ -70,6 +71,7 @@ export default function App() {
       <div className={clsx(classes.mb)}>
         <Positions />
       </div>
+      <WrongNetwork />
     </div>
   );
 }

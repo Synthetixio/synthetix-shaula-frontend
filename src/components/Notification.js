@@ -117,7 +117,6 @@ function ErrorContent({ notification }) {
   const classes = useStyles();
   return (
     <>
-      <div>An Error Occured</div>
       <strong className={clsx(classes.small, classes.error)}>
         {notification.message}
       </strong>

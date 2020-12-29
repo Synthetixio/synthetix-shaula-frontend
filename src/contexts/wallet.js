@@ -1,7 +1,6 @@
 import React from 'react';
 import wallet from 'utils/wallet';
 import NETWORKS from 'networks.json';
-import clone from 'utils/clone';
 
 const WalletContext = React.createContext(null);
 
@@ -23,7 +22,7 @@ export function WalletProvider({ children }) {
       return r;
     }, {});
 
-    return { ...clone(cfg), MULTI_COLLATERAL_TOKEN_CURRENCIES_BY_ADDRESS };
+    return { ...cfg, MULTI_COLLATERAL_TOKEN_CURRENCIES_BY_ADDRESS };
   }, [network]);
 
   async function connect(tryCached) {
