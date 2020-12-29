@@ -20,6 +20,10 @@ import MULTI_COLLATERAL_ERC20_ABI from 'abis/multi-collateral-erc20.json';
 import MULTI_COLLATERAL_ETH_ABI from 'abis/multi-collateral-eth.json';
 import MULTI_COLLATERAL_SHORT_ABI from 'abis/multi-collateral-short.json';
 
+const LOAN_TYPE_ERC20 = 'erc20';
+const LOAN_TYPE_ETH = 'eth';
+const LOAN_TYPE_SHORT = 'short';
+
 export const useStyles = makeStyles(theme => ({
   container: {
     background: 'rgb(16, 16, 78)', // 'linear-gradient(0deg, rgb(8, 2, 30) 0%, rgb(18, 4, 70) 146.21%)',
@@ -148,15 +152,15 @@ export default function() {
   );
 
   const contracts = {
-    erc20: erc20CollateralContract,
-    eth: ethCollateralContract,
-    short: shortCollateralContract,
+    [LOAN_TYPE_ERC20]: erc20CollateralContract,
+    [LOAN_TYPE_ETH]: ethCollateralContract,
+    [LOAN_TYPE_SHORT]: shortCollateralContract,
   };
 
   const stateContracts = {
-    erc20: erc20CollateralStateContract,
-    eth: ethCollateralStateContract,
-    short: shortCollateralStateContract,
+    [LOAN_TYPE_ERC20]: erc20CollateralStateContract,
+    [LOAN_TYPE_ETH]: ethCollateralStateContract,
+    [LOAN_TYPE_SHORT]: shortCollateralStateContract,
   };
 
   const loadLoans = async () => {
@@ -178,7 +182,7 @@ export default function() {
       const loan = await erc20CollateralStateContract.loans(address, i);
       loans.push({
         ...loan,
-        type: 'erc20',
+        type: LOAN_TYPE_ERC20,
       });
     }
     for (
@@ -189,7 +193,7 @@ export default function() {
       const loan = await ethCollateralStateContract.loans(address, i);
       loans.push({
         ...loan,
-        type: 'eth',
+        type: LOAN_TYPE_ETH,
       });
     }
     for (
@@ -200,7 +204,7 @@ export default function() {
       const loan = await shortCollateralStateContract.loans(address, i);
       loans.push({
         ...loan,
-        type: 'short',
+        type: LOAN_TYPE_SHORT,
       });
     }
     loans = loans.filter(loan => !loan.amount.isZero());
@@ -274,7 +278,7 @@ export default function() {
                   <TableCell>Type</TableCell>
                   <TableCell>Collateral</TableCell>
                   <TableCell>Asset</TableCell>
-                  <TableCell>Interest</TableCell>
+                  <TableCell align="center">Accrued Interest</TableCell>
                   <TableCell align="right"></TableCell>
                 </TableRow>
               </TableHead>
@@ -297,6 +301,20 @@ function Loan({ loan, contracts }) {
     config: { MULTI_COLLATERAL_TOKEN_CURRENCIES_BY_ADDRESS },
   } = useWallet();
   const { showTxNotification, showErrorNotification } = useNotifications();
+
+  const targetName = React.useMemo(
+    () => MULTI_COLLATERAL_TOKEN_CURRENCIES_BY_ADDRESS[loan.currency],
+    [MULTI_COLLATERAL_TOKEN_CURRENCIES_BY_ADDRESS, loan]
+  );
+  const collateralName = React.useMemo(
+    () =>
+      ({
+        [LOAN_TYPE_ERC20]: 'renBTC',
+        [LOAN_TYPE_ETH]: 'ETH',
+        [LOAN_TYPE_SHORT]: 'sUSD',
+      }[loan.type]),
+    [loan]
+  );
 
   const close = async () => {
     try {
@@ -322,13 +340,16 @@ function Loan({ loan, contracts }) {
           .local()
           .format('YYYY-MM-DD HH:mm')}
       </TableCell>
-      <TableCell>{loan.short ? 'short' : 'long'}</TableCell>
-      <TableCell>-</TableCell>
+      <TableCell>{loan.short ? 'Short' : 'Borrow'}</TableCell>
       <TableCell>
-        {formatUnits(loan.amount, 18)}{' '}
-        {MULTI_COLLATERAL_TOKEN_CURRENCIES_BY_ADDRESS[loan.currency]}
+        {formatUnits(loan.collateral, 18)} {collateralName}
       </TableCell>
-      <TableCell>{formatUnits(loan.accruedInterest, 18)}</TableCell>
+      <TableCell>
+        {formatUnits(loan.amount, 18)} {targetName}
+      </TableCell>
+      <TableCell align="center">
+        {formatUnits(loan.accruedInterest, 18)}
+      </TableCell>
       <TableCell align="right">
         <Button
           color="secondary"
