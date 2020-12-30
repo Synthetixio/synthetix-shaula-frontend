@@ -13,13 +13,12 @@ import { useWallet } from 'contexts/wallet';
 
 const useStyles = makeStyles(theme => ({
   paper: {
-    background: 'rgb(17 17 230)',
+    color: 'white',
   },
   container: {
     padding: '10px 20px 10px 10px',
-    lineHeight: '1.5rem',
     '& a': {
-      color: theme.palette.secondary.main,
+      color: 'white',
       display: 'block',
       textDecoration: 'underline',
     },
@@ -37,11 +36,14 @@ const useStyles = makeStyles(theme => ({
     right: 5,
     cursor: 'pointer',
   },
+  tx: {
+    background: '#2196f3',
+  },
   error: {
-    color: 'red',
+    background: '#d32f2f',
   },
   success: {
-    // color: 'green',
+    background: '#43a047',
   },
   small: {
     fontSize: 12,
@@ -66,7 +68,7 @@ export default function({ id, notification }) {
   ] = TYPES.get(notification.type);
 
   return (
-    <Paper className={classes.paper}>
+    <Paper className={clsx(classes.paper, classes[notification.type])}>
       <div className={classes.close} onClick={clearNotification}>
         <CloseIcon style={{ fontSize: 15 }} />
       </div>
@@ -86,10 +88,9 @@ export default function({ id, notification }) {
 function TxContent({ notification }) {
   const classes = useStyles();
   const { network } = useWallet();
+
   return (
     <>
-      <div>Transaction Submitted</div>
-
       <strong className={classes.small}>{notification.description}</strong>
 
       <a
