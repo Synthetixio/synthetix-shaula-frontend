@@ -8,7 +8,7 @@ export default function() {
     <MultiCollateral
       collateralAssets={COLLATERAL_ASSETS}
       targetAssetsFilter={currentCollateralName =>
-        currentCollateralName === 'ETH' ? ['sETH', 'sUSD'] : ['sBTC', 'sUSD']
+        currentCollateralName === 'ETH' ? ['sUSD', 'sETH'] : ['sUSD', 'sBTC']
       }
     />
   );

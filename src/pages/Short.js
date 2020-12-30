@@ -2,7 +2,7 @@ import React from 'react';
 import MultiCollateral from './MultiCollateral';
 
 const COLLATERAL_ASSETS = ['sUSD'];
-const SHORT_ASSETS = ['sBTC', 'sETH'];
+const SHORT_ASSETS = ['sETH', 'sBTC'];
 
 export default function() {
   return (
