@@ -50,13 +50,13 @@ async function getNetworkConfig(network) {
     sETHAddress,
     sUSDAddress,
 
-    MULTI_COLLATERAL_ERC20_ADDRESS,
-    MULTI_COLLATERAL_ETH_ADDRESS,
-    MULTI_COLLATERAL_SHORT_ADDRESS,
+    multiCollateralERC20Address,
+    multiCollateralETHAddress,
+    multiCollateralShortAddress,
 
-    ERC20_COLLATERAL_STATE_ADDRESS,
-    ETH_COLLATERAL_STATE_ADDRESS,
-    SHORT_COLLATERAL_STATE_ADDRESS,
+    erc20CollateralStateAddress,
+    ethCollateralStateAddress,
+    shortCollateralStateAddress,
   ] = await Promise.all(
     [
       'ProxysBTC',
@@ -74,7 +74,7 @@ async function getNetworkConfig(network) {
   );
 
   const multiCollateralContract = new ethers.Contract(
-    MULTI_COLLATERAL_ERC20_ADDRESS,
+    multiCollateralERC20Address,
     MULTI_COLLATERAL_ERC20_ABI,
     infuraProvider
   );
@@ -92,7 +92,7 @@ async function getNetworkConfig(network) {
     '0x7355534400000000000000000000000000000000000000000000000000000000';
 
   const cfg = {
-    TOKENS: {
+    tokens: {
       sBTC: [18, sBTCAddress],
       sETH: [18, sETHAddress],
       sUSD: [18, sUSDAddress],
@@ -100,19 +100,19 @@ async function getNetworkConfig(network) {
       ETH: [18, '0xee'],
     },
 
-    MULTI_COLLATERAL_TOKEN_CURRENCIES: {
+    multiCollateralTokenCurrencies: {
       sBTC: sBTCCurrency,
       sETH: sETHCurrency,
       sUSD: sUSDCurrency,
     },
 
-    MULTI_COLLATERAL_ERC20_ADDRESS,
-    MULTI_COLLATERAL_ETH_ADDRESS,
-    MULTI_COLLATERAL_SHORT_ADDRESS,
+    multiCollateralERC20Address,
+    multiCollateralETHAddress,
+    multiCollateralShortAddress,
 
-    ERC20_COLLATERAL_STATE_ADDRESS,
-    ETH_COLLATERAL_STATE_ADDRESS,
-    SHORT_COLLATERAL_STATE_ADDRESS,
+    erc20CollateralStateAddress,
+    ethCollateralStateAddress,
+    shortCollateralStateAddress,
   };
 
   return cfg;

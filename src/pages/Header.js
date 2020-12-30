@@ -1,13 +1,6 @@
 import React from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import {
-  IconButton,
-  AppBar,
-  Typography,
-  Toolbar,
-  Button,
-} from '@material-ui/core';
-import MenuIcon from '@material-ui/icons/Menu';
+import { AppBar, Typography, Toolbar, Button } from '@material-ui/core';
 import { APP_TITLE } from 'config';
 import { useWallet } from 'contexts/wallet';
 
@@ -18,17 +11,6 @@ const useStyles = makeStyles(theme => ({
   },
   account: {
     marginRight: 10,
-    [theme.breakpoints.down('sm')]: {
-      display: 'none',
-    },
-  },
-  backToHome: {
-    [theme.breakpoints.down('sm')]: {
-      display: 'none',
-    },
-  },
-  subtitle: {
-    fontSize: 9,
     [theme.breakpoints.down('sm')]: {
       display: 'none',
     },
@@ -45,14 +27,6 @@ export default function Component() {
   return (
     <AppBar position="fixed" color="inherit" className={classes.container}>
       <Toolbar color="inherit">
-        <IconButton
-          edge="start"
-          color="inherit"
-          aria-label="menu"
-          className={classes.backToHome}
-        >
-          <MenuIcon />
-        </IconButton>
         <Typography variant="h6" className={'flex flex-grow'}>
           <div className={'flex flex-col'}>
             <div>{APP_TITLE}</div>

@@ -67,12 +67,12 @@ export default function() {
     signer,
     address,
     config: {
-      ERC20_COLLATERAL_STATE_ADDRESS,
-      ETH_COLLATERAL_STATE_ADDRESS,
-      SHORT_COLLATERAL_STATE_ADDRESS,
-      MULTI_COLLATERAL_ERC20_ADDRESS,
-      MULTI_COLLATERAL_ETH_ADDRESS,
-      MULTI_COLLATERAL_SHORT_ADDRESS,
+      erc20CollateralStateAddress,
+      ethCollateralStateAddress,
+      shortCollateralStateAddress,
+      multiCollateralERC20Address,
+      multiCollateralETHAddress,
+      multiCollateralShortAddress,
     },
   } = useWallet();
 
@@ -82,73 +82,73 @@ export default function() {
   const erc20CollateralStateContract = React.useMemo(
     () =>
       signer &&
-      ERC20_COLLATERAL_STATE_ADDRESS &&
+      erc20CollateralStateAddress &&
       new ethers.Contract(
-        ERC20_COLLATERAL_STATE_ADDRESS,
+        erc20CollateralStateAddress,
         COLLATERAL_STATE_ABI,
         signer
       ),
-    [signer, ERC20_COLLATERAL_STATE_ADDRESS]
+    [signer, erc20CollateralStateAddress]
   );
 
   const ethCollateralStateContract = React.useMemo(
     () =>
       signer &&
-      ETH_COLLATERAL_STATE_ADDRESS &&
+      ethCollateralStateAddress &&
       new ethers.Contract(
-        ETH_COLLATERAL_STATE_ADDRESS,
+        ethCollateralStateAddress,
         COLLATERAL_STATE_ABI,
         signer
       ),
-    [signer, ETH_COLLATERAL_STATE_ADDRESS]
+    [signer, ethCollateralStateAddress]
   );
 
   const shortCollateralStateContract = React.useMemo(
     () =>
       signer &&
-      SHORT_COLLATERAL_STATE_ADDRESS &&
+      shortCollateralStateAddress &&
       new ethers.Contract(
-        SHORT_COLLATERAL_STATE_ADDRESS,
+        shortCollateralStateAddress,
         COLLATERAL_STATE_ABI,
         signer
       ),
-    [signer, SHORT_COLLATERAL_STATE_ADDRESS]
+    [signer, shortCollateralStateAddress]
   );
 
   const erc20CollateralContract = React.useMemo(
     () =>
       signer &&
-      MULTI_COLLATERAL_ERC20_ADDRESS &&
+      multiCollateralERC20Address &&
       new ethers.Contract(
-        MULTI_COLLATERAL_ERC20_ADDRESS,
+        multiCollateralERC20Address,
         MULTI_COLLATERAL_ERC20_ABI,
         signer
       ),
-    [signer, MULTI_COLLATERAL_ERC20_ADDRESS]
+    [signer, multiCollateralERC20Address]
   );
 
   const ethCollateralContract = React.useMemo(
     () =>
       signer &&
-      MULTI_COLLATERAL_ETH_ADDRESS &&
+      multiCollateralETHAddress &&
       new ethers.Contract(
-        MULTI_COLLATERAL_ETH_ADDRESS,
+        multiCollateralETHAddress,
         MULTI_COLLATERAL_ETH_ABI,
         signer
       ),
-    [signer, MULTI_COLLATERAL_ETH_ADDRESS]
+    [signer, multiCollateralETHAddress]
   );
 
   const shortCollateralContract = React.useMemo(
     () =>
       signer &&
-      MULTI_COLLATERAL_SHORT_ADDRESS &&
+      multiCollateralShortAddress &&
       new ethers.Contract(
-        MULTI_COLLATERAL_SHORT_ADDRESS,
+        multiCollateralShortAddress,
         MULTI_COLLATERAL_SHORT_ABI,
         signer
       ),
-    [signer, MULTI_COLLATERAL_SHORT_ADDRESS]
+    [signer, multiCollateralShortAddress]
   );
 
   const contracts = {
@@ -298,13 +298,13 @@ export default function() {
 function Loan({ loan, contracts }) {
   const [isClosing, setIsClosing] = React.useState(false);
   const {
-    config: { MULTI_COLLATERAL_TOKEN_CURRENCIES_BY_ADDRESS },
+    config: { multiCollateralTokenCurrencies_BY_ADDRESS },
   } = useWallet();
   const { showTxNotification, showErrorNotification } = useNotifications();
 
   const targetName = React.useMemo(
-    () => MULTI_COLLATERAL_TOKEN_CURRENCIES_BY_ADDRESS[loan.currency],
-    [MULTI_COLLATERAL_TOKEN_CURRENCIES_BY_ADDRESS, loan]
+    () => multiCollateralTokenCurrencies_BY_ADDRESS[loan.currency],
+    [multiCollateralTokenCurrencies_BY_ADDRESS, loan]
   );
   const collateralName = React.useMemo(
     () =>

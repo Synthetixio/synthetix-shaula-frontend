@@ -39,7 +39,7 @@ const useStyles = makeStyles(theme => ({
 export default function() {
   const classes = useStyles();
   const { network } = useWallet();
-  const isOnCorrentNetwork = React.useMemo(
+  const isOnCorrectNetwork = React.useMemo(
     () => !network || network in NETWORKS,
     [network]
   );
@@ -49,7 +49,7 @@ export default function() {
     <Dialog
       onClose={() => {}}
       aria-labelledby="wrong-network-prompt"
-      open={!isOnCorrentNetwork}
+      open={!isOnCorrectNetwork}
     >
       <div
         className={clsx(

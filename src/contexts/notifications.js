@@ -53,7 +53,7 @@ export function NotificationsProvider({ children }) {
 export function useNotifications() {
   const context = React.useContext(NotificationsContext);
   if (!context) {
-    throw new Error('Missing notification context');
+    throw new Error('Missing notifications context');
   }
   const {
     showTxNotification,

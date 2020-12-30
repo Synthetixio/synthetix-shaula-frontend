@@ -68,11 +68,11 @@ export default function({ collateralAssets, targetAssetsFilter, short }) {
     address,
     connect,
     config: {
-      TOKENS,
-      MULTI_COLLATERAL_TOKEN_CURRENCIES,
-      MULTI_COLLATERAL_ERC20_ADDRESS,
-      MULTI_COLLATERAL_ETH_ADDRESS,
-      MULTI_COLLATERAL_SHORT_ADDRESS,
+      tokens,
+      multiCollateralTokenCurrencies,
+      multiCollateralERC20Address,
+      multiCollateralETHAddress,
+      multiCollateralShortAddress,
     },
   } = useWallet();
 
@@ -87,8 +87,8 @@ export default function({ collateralAssets, targetAssetsFilter, short }) {
     targetAssetsFilter(collateralAssets[0])
   );
   const [targetDecimals, targetAddress] = React.useMemo(
-    () => (TOKENS && targetName && TOKENS[targetName]) ?? [],
-    [TOKENS, targetName]
+    () => (tokens && targetName && tokens[targetName]) ?? [],
+    [tokens, targetName]
   );
 
   const [targetAmountNumber, setTargetAmountNumber] = React.useState(0);
@@ -119,8 +119,8 @@ export default function({ collateralAssets, targetAssetsFilter, short }) {
   );
   const collateralIsETH = collateralName === 'ETH';
   const [collateralDecimals, collateralAddress] = React.useMemo(
-    () => (TOKENS && collateralName && TOKENS[collateralName]) ?? [],
-    [TOKENS, collateralName]
+    () => (tokens && collateralName && tokens[collateralName]) ?? [],
+    [tokens, collateralName]
   );
   const [collateralAmountNumber, setCollateralAmountNumber] = React.useState(0);
   const collateralAmount = React.useMemo(() => {
@@ -135,10 +135,10 @@ export default function({ collateralAssets, targetAssetsFilter, short }) {
   }, [collateralAmountNumber, collateralDecimals]);
 
   const multiCollateralAddress = short
-    ? MULTI_COLLATERAL_SHORT_ADDRESS
+    ? multiCollateralShortAddress
     : collateralIsETH
-    ? MULTI_COLLATERAL_ETH_ADDRESS
-    : MULTI_COLLATERAL_ERC20_ADDRESS;
+    ? multiCollateralETHAddress
+    : multiCollateralERC20Address;
   const collateralContract = React.useMemo(
     () =>
       signer &&
@@ -151,13 +151,13 @@ export default function({ collateralAssets, targetAssetsFilter, short }) {
   const multiCollateralContract = React.useMemo(
     () =>
       signer &&
-      MULTI_COLLATERAL_ETH_ADDRESS &&
-      MULTI_COLLATERAL_SHORT_ADDRESS &&
+      multiCollateralETHAddress &&
+      multiCollateralShortAddress &&
       new ethers.Contract(
         short
-          ? MULTI_COLLATERAL_SHORT_ADDRESS
+          ? multiCollateralShortAddress
           : collateralIsETH
-          ? MULTI_COLLATERAL_ETH_ADDRESS
+          ? multiCollateralETHAddress
           : multiCollateralAddress,
         short
           ? MULTI_COLLATERAL_SHORT_ABI
@@ -171,8 +171,8 @@ export default function({ collateralAssets, targetAssetsFilter, short }) {
       collateralIsETH,
       multiCollateralAddress,
       short,
-      MULTI_COLLATERAL_ETH_ADDRESS,
-      MULTI_COLLATERAL_SHORT_ADDRESS,
+      multiCollateralETHAddress,
+      multiCollateralShortAddress,
     ]
   );
 
@@ -225,13 +225,13 @@ export default function({ collateralAssets, targetAssetsFilter, short }) {
       const tx = await (collateralIsETH
         ? multiCollateralContract.open(
             targetAmount,
-            MULTI_COLLATERAL_TOKEN_CURRENCIES[targetName],
+            multiCollateralTokenCurrencies[targetName],
             { value: collateralAmount }
           )
         : multiCollateralContract.open(
             collateralAmount,
             targetAmount,
-            MULTI_COLLATERAL_TOKEN_CURRENCIES[targetName]
+            multiCollateralTokenCurrencies[targetName]
           ));
       showTxNotification(
         `${label}ing ${formatUnits(

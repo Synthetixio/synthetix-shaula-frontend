@@ -63,7 +63,7 @@ export default function() {
   const {
     signer,
     address,
-    config: { MULTI_COLLATERAL_ETH_ADDRESS },
+    config: { multiCollateralETHAddress },
   } = useWallet();
 
   const [isLoading, setIsLoading] = React.useState(false);
@@ -75,13 +75,13 @@ export default function() {
   const contract = React.useMemo(
     () =>
       signer &&
-      MULTI_COLLATERAL_ETH_ADDRESS &&
+      multiCollateralETHAddress &&
       new ethers.Contract(
-        MULTI_COLLATERAL_ETH_ADDRESS,
+        multiCollateralETHAddress,
         MULTI_COLLATERAL_ETH_ABI,
         signer
       ),
-    [signer, MULTI_COLLATERAL_ETH_ADDRESS]
+    [signer, multiCollateralETHAddress]
   );
 
   const claim = async () => {

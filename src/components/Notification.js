@@ -23,13 +23,6 @@ const useStyles = makeStyles(theme => ({
       display: 'block',
       textDecoration: 'underline',
     },
-    '& button': {
-      width: '100%',
-      padding: '10px 0',
-      marginTop: 20,
-      fontSize: 18,
-      fontFamily: 'GT-America-Extended-Bold, "Work Sans", Arial',
-    },
   },
   icon: {
     // border: '1px solid',

@@ -2,7 +2,7 @@ import React from 'react';
 import clsx from 'clsx';
 import { makeStyles } from '@material-ui/core/styles';
 
-import Header from 'components/Header';
+import Header from './Header';
 import Borrow from './Borrow';
 import Short from './Short';
 import Positions from './Positions';
