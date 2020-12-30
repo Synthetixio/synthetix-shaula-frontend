@@ -1,6 +1,6 @@
 import { ethers } from 'ethers';
 import Onboard from 'bnc-onboard';
-import { BLOCKNATIVE_KEY, INFURA_ID, CACHE_WALLET_KEY } from 'config';
+import { INFURA_ID, CACHE_WALLET_KEY } from 'config';
 import cache from 'utils/cache';
 
 const DEFAULT_NETWORK_ID = 1;
@@ -14,7 +14,6 @@ class Wallet {
     }
 
     const onboard = Onboard({
-      dappId: BLOCKNATIVE_KEY,
       networkId: await getDefaultNetworkId(),
     });
 
