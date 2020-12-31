@@ -15,14 +15,14 @@ export function WalletProvider({ children }) {
     const cfg = NETWORKS[network];
     if (!cfg) return {};
 
-    const multiCollateralTokenCurrencies_BY_ADDRESS = Object.entries(
+    const multiCollateralTokenCurrenciesByAddress = Object.entries(
       cfg.multiCollateralTokenCurrencies
     ).reduce((r, [k, v]) => {
       r[v] = k;
       return r;
     }, {});
 
-    return { ...cfg, multiCollateralTokenCurrencies_BY_ADDRESS };
+    return { ...cfg, multiCollateralTokenCurrenciesByAddress };
   }, [network]);
 
   async function connect(tryCached) {

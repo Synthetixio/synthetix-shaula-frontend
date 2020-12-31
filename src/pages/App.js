@@ -7,6 +7,7 @@ import Borrow from './Borrow';
 import Short from './Short';
 import Positions from './Positions';
 import PendingWithdrawals from './PendingWithdrawals';
+import Owings from './Owings';
 import WrongNetwork from './WrongNetwork';
 
 const MARGIN = 14;
@@ -22,22 +23,15 @@ const useStyles = makeStyles(theme => ({
       width: 'auto',
     },
   },
-  types: {
+  grid: {
+    display: 'grid',
+    columnGap: `${MARGIN}px`,
+    gridTemplateColumns: '1fr 1fr',
     [theme.breakpoints.down('sm')]: {
-      flexDirection: 'column',
-      marginBottom: '0',
-    },
-  },
-  ml: {
-    marginLeft: MARGIN / 2,
-    [theme.breakpoints.down('sm')]: {
-      margin: '0 10px 10px',
-    },
-  },
-  mr: {
-    marginRight: MARGIN / 2,
-    [theme.breakpoints.down('sm')]: {
-      margin: '0 10px 10px',
+      columnGap: 0,
+      gridTemplateColumns: 'none',
+      rowGap: `${MARGIN}px`,
+      gridTemplateRows: '1fr 1fr',
     },
   },
   mb: {
@@ -51,26 +45,21 @@ export default function App() {
   return (
     <div className={classes.container}>
       <Header />
-      <div
-        className={clsx(
-          classes.types,
-          classes.mb,
-          'flex flex-grow justify-space'
-        )}
-      >
-        <div className={clsx(classes.mr, 'flex', 'flex-grow')}>
-          <Borrow />
-        </div>
-        <div className={clsx(classes.ml, 'flex', 'flex-grow')}>
-          <Short />
-        </div>
+
+      <div className={clsx(classes.grid, classes.mb)}>
+        <Borrow />
+        <Short />
       </div>
-      <div className={clsx(classes.mb)}>
+
+      <div className={clsx(classes.grid, classes.mb)}>
         <PendingWithdrawals />
+        <Owings />
       </div>
+
       <div className={clsx(classes.mb)}>
         <Positions />
       </div>
+
       <WrongNetwork />
     </div>
   );

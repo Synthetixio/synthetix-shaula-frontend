@@ -57,6 +57,8 @@ async function getNetworkConfig(network) {
     erc20CollateralStateAddress,
     ethCollateralStateAddress,
     shortCollateralStateAddress,
+
+    exchangerAddress,
   ] = await Promise.all(
     [
       'ProxysBTC',
@@ -70,6 +72,8 @@ async function getNetworkConfig(network) {
       'CollateralStateErc20',
       'CollateralStateEth',
       'CollateralStateShort',
+
+      'Exchanger',
     ].map(request.bind(null, network))
   );
 
@@ -113,6 +117,8 @@ async function getNetworkConfig(network) {
     erc20CollateralStateAddress,
     ethCollateralStateAddress,
     shortCollateralStateAddress,
+
+    exchangerAddress,
   };
 
   return cfg;

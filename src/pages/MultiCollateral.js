@@ -61,7 +61,11 @@ export default function({ collateralAssets, targetAssetsFilter, short }) {
   const classes = useStyles();
   const label = short ? 'Short' : 'Borrow';
 
-  const { showTxNotification, showErrorNotification } = useNotifications();
+  const {
+    showTxNotification,
+    showErrorNotification,
+    showSuccessNotification,
+  } = useNotifications();
 
   const {
     signer,
@@ -207,7 +211,7 @@ export default function({ collateralAssets, targetAssetsFilter, short }) {
       );
       showTxNotification(`Approving ${collateralName}`, tx.hash);
       await tx.wait();
-      showTxNotification(`Approved ${collateralName}`, tx.hash);
+      showSuccessNotification(`Approved ${collateralName}`, tx.hash);
       await checkCollateralAllowance();
     } catch (e) {
       showErrorNotification(e);
@@ -241,7 +245,7 @@ export default function({ collateralAssets, targetAssetsFilter, short }) {
         tx.hash
       );
       await tx.wait();
-      showTxNotification(
+      showSuccessNotification(
         `${label}ed ${formatUnits(targetAmount, targetDecimals)} ${targetName}`,
         tx.hash
       );

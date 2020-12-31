@@ -298,13 +298,17 @@ export default function() {
 function Loan({ loan, contracts }) {
   const [isClosing, setIsClosing] = React.useState(false);
   const {
-    config: { multiCollateralTokenCurrencies_BY_ADDRESS },
+    config: { multiCollateralTokenCurrenciesByAddress },
   } = useWallet();
-  const { showTxNotification, showErrorNotification } = useNotifications();
+  const {
+    showTxNotification,
+    showErrorNotification,
+    showSuccessNotification,
+  } = useNotifications();
 
   const targetName = React.useMemo(
-    () => multiCollateralTokenCurrencies_BY_ADDRESS[loan.currency],
-    [multiCollateralTokenCurrencies_BY_ADDRESS, loan]
+    () => multiCollateralTokenCurrenciesByAddress[loan.currency],
+    [multiCollateralTokenCurrenciesByAddress, loan]
   );
   const collateralName = React.useMemo(
     () =>
@@ -322,6 +326,10 @@ function Loan({ loan, contracts }) {
       const tx = await contracts[loan.type].close(loan.id);
       showTxNotification(`Closing loan(#${loan.id.toString()})`, tx.hash);
       await tx.wait();
+      showSuccessNotification(
+        `Loan(#${loan.id.toString()}) successfully closed.`,
+        tx.hash
+      );
     } catch (e) {
       showErrorNotification(e);
     } finally {

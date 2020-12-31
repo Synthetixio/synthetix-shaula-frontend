@@ -54,12 +54,6 @@ export default function() {
     showSuccessNotification,
   } = useNotifications();
 
-  // React.useEffect(() => {
-  //   showTxNotification('Approve UNI', '3');
-  //   showErrorNotification(new Error('oh no'));
-  //   showSuccessNotification('Done', 'Approved UNI');
-  // }, [showTxNotification]);
-
   const {
     signer,
     address,
@@ -72,7 +66,7 @@ export default function() {
     ethers.BigNumber.from('0')
   );
 
-  const contract = React.useMemo(
+  const ethMultiCollateralContract = React.useMemo(
     () =>
       signer &&
       multiCollateralETHAddress &&
@@ -87,8 +81,8 @@ export default function() {
   const claim = async () => {
     try {
       setIsClaiming(true);
-      const tx = await contract.claim(
-        await contract.pendingWithdrawals(address)
+      const tx = await ethMultiCollateralContract.claim(
+        await ethMultiCollateralContract.pendingWithdrawals(address)
       );
       showTxNotification(
         `Withdrawing ${formatUnits(pendingWithdrawals, 18)} ETH`,
@@ -103,7 +97,7 @@ export default function() {
         )} ETH.`
       );
       await sleep(1000);
-      setPendingWithdrawals(await contract.pendingWithdrawals(address));
+      await loadPendingWithdrawals();
     } catch (e) {
       showErrorNotification(e);
     } finally {
@@ -111,18 +105,20 @@ export default function() {
     }
   };
 
-  const load = async () => {
-    if (!contract) return;
+  const loadPendingWithdrawals = async () => {
+    if (!(ethMultiCollateralContract && address)) return;
     setIsLoading(true);
-    setPendingWithdrawals(await contract.pendingWithdrawals(address));
+    setPendingWithdrawals(
+      await ethMultiCollateralContract.pendingWithdrawals(address)
+    );
     setIsLoading(false);
   };
 
   React.useEffect(() => {
-    load(); // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [contract]);
+    loadPendingWithdrawals(); // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ethMultiCollateralContract, address]);
 
-  return !contract ? null : (
+  return (
     <Paper className={classes.container}>
       <div className={classes.content}>
         <div className={classes.heading}>Pending Withdrawals</div>
