@@ -1,12 +1,10 @@
 import React from 'react';
-import * as ethers from 'ethers';
 import { makeStyles } from '@material-ui/core/styles';
 import { Paper, Button } from '@material-ui/core';
 import { useWallet } from 'contexts/wallet';
 import Loader from 'components/Loader';
 import { formatUnits } from 'utils/big-number';
 import sleep from 'utils/sleep';
-import EXCHANGER_ABI from 'abis/exchanger.json';
 import { useNotifications } from 'contexts/notifications';
 
 export const useStyles = makeStyles(theme => ({
@@ -52,19 +50,12 @@ export default function() {
   const {
     signer,
     address,
-    config: { exchangerAddress, multiCollateralTokenCurrencies },
+    config: { multiCollateralTokenCurrencies },
+    exchangerContract,
   } = useWallet();
 
   const [isLoading, setIsLoading] = React.useState(false);
   const [owings, setOwings] = React.useState([]);
-
-  const exchangerContract = React.useMemo(
-    () =>
-      signer &&
-      exchangerAddress &&
-      new ethers.Contract(exchangerAddress, EXCHANGER_ABI, signer),
-    [signer, exchangerAddress]
-  );
 
   const hasOwings = React.useMemo(
     () => owings.length && !owings.find(owing => !owing.reclaimAmount.isZero()),
@@ -93,7 +84,7 @@ export default function() {
     loadOwings(); // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [exchangerContract, multiCollateralTokenCurrencies, address]);
 
-  return (
+  return !signer ? null : (
     <Paper className={classes.container}>
       <div className={classes.content}>
         <div className={classes.heading}>Owings</div>

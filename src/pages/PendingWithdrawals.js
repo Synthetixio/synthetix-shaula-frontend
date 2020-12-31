@@ -6,7 +6,6 @@ import { useWallet } from 'contexts/wallet';
 import Loader from 'components/Loader';
 import { formatUnits } from 'utils/big-number';
 import sleep from 'utils/sleep';
-import MULTI_COLLATERAL_ETH_ABI from 'abis/multi-collateral-eth.json';
 import { useNotifications } from 'contexts/notifications';
 
 export const useStyles = makeStyles(theme => ({
@@ -54,11 +53,7 @@ export default function() {
     showSuccessNotification,
   } = useNotifications();
 
-  const {
-    signer,
-    address,
-    config: { multiCollateralETHAddress },
-  } = useWallet();
+  const { signer, address, ethCollateralContract } = useWallet();
 
   const [isLoading, setIsLoading] = React.useState(false);
   const [isClaiming, setIsClaiming] = React.useState(false);
@@ -66,23 +61,11 @@ export default function() {
     ethers.BigNumber.from('0')
   );
 
-  const ethMultiCollateralContract = React.useMemo(
-    () =>
-      signer &&
-      multiCollateralETHAddress &&
-      new ethers.Contract(
-        multiCollateralETHAddress,
-        MULTI_COLLATERAL_ETH_ABI,
-        signer
-      ),
-    [signer, multiCollateralETHAddress]
-  );
-
   const claim = async () => {
     try {
       setIsClaiming(true);
-      const tx = await ethMultiCollateralContract.claim(
-        await ethMultiCollateralContract.pendingWithdrawals(address)
+      const tx = await ethCollateralContract.claim(
+        await ethCollateralContract.pendingWithdrawals(address)
       );
       showTxNotification(
         `Withdrawing ${formatUnits(pendingWithdrawals, 18)} ETH`,
@@ -106,19 +89,19 @@ export default function() {
   };
 
   const loadPendingWithdrawals = async () => {
-    if (!(ethMultiCollateralContract && address)) return;
+    if (!(ethCollateralContract && address)) return;
     setIsLoading(true);
     setPendingWithdrawals(
-      await ethMultiCollateralContract.pendingWithdrawals(address)
+      await ethCollateralContract.pendingWithdrawals(address)
     );
     setIsLoading(false);
   };
 
   React.useEffect(() => {
     loadPendingWithdrawals(); // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ethMultiCollateralContract, address]);
+  }, [ethCollateralContract, address]);
 
-  return (
+  return !signer ? null : (
     <Paper className={classes.container}>
       <div className={classes.content}>
         <div className={classes.heading}>Pending Withdrawals</div>

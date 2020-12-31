@@ -6,9 +6,6 @@ import { useWallet } from 'contexts/wallet';
 import { formatUnits } from 'utils/big-number';
 import Balance from 'components/Balance';
 import ERC20_CONTRACT_ABI from 'abis/erc20.json';
-import MULTI_COLLATERAL_ERC20_ABI from 'abis/multi-collateral-erc20.json';
-import MULTI_COLLATERAL_ETH_ABI from 'abis/multi-collateral-eth.json';
-import MULTI_COLLATERAL_SHORT_ABI from 'abis/multi-collateral-short.json';
 import { useNotifications } from 'contexts/notifications';
 
 export const useStyles = makeStyles(theme => ({
@@ -78,6 +75,10 @@ export default function({ collateralAssets, targetAssetsFilter, short }) {
       multiCollateralETHAddress,
       multiCollateralShortAddress,
     },
+
+    erc20CollateralContract,
+    ethCollateralContract,
+    shortCollateralContract,
   } = useWallet();
 
   const [isApproving, setIsApproving] = React.useState(false);
@@ -107,17 +108,6 @@ export default function({ collateralAssets, targetAssetsFilter, short }) {
     }
   }, [targetAmountNumber, targetDecimals]);
 
-  // const targetContract = React.useMemo(
-  //   () =>
-  //     signer &&
-  //     new ethers.Contract(
-  //       targetAddress,
-  //       ERC20_CONTRACT_ABI,
-  //       signer
-  //     ),
-  //   [signer, targetAddress]
-  // );
-
   const [collateralName, setCollateralAsset] = React.useState(
     collateralAssets[0]
   );
@@ -143,6 +133,7 @@ export default function({ collateralAssets, targetAssetsFilter, short }) {
     : collateralIsETH
     ? multiCollateralETHAddress
     : multiCollateralERC20Address;
+
   const collateralContract = React.useMemo(
     () =>
       signer &&
@@ -154,29 +145,18 @@ export default function({ collateralAssets, targetAssetsFilter, short }) {
 
   const multiCollateralContract = React.useMemo(
     () =>
-      signer &&
-      multiCollateralETHAddress &&
-      multiCollateralShortAddress &&
-      new ethers.Contract(
-        short
-          ? multiCollateralShortAddress
-          : collateralIsETH
-          ? multiCollateralETHAddress
-          : multiCollateralAddress,
-        short
-          ? MULTI_COLLATERAL_SHORT_ABI
-          : collateralIsETH
-          ? MULTI_COLLATERAL_ETH_ABI
-          : MULTI_COLLATERAL_ERC20_ABI,
-        signer
-      ),
+      signer && short
+        ? shortCollateralContract
+        : collateralIsETH
+        ? ethCollateralContract
+        : erc20CollateralContract,
     [
       signer,
-      collateralIsETH,
-      multiCollateralAddress,
       short,
-      multiCollateralETHAddress,
-      multiCollateralShortAddress,
+      collateralIsETH,
+      erc20CollateralContract,
+      ethCollateralContract,
+      shortCollateralContract,
     ]
   );
 
@@ -257,7 +237,7 @@ export default function({ collateralAssets, targetAssetsFilter, short }) {
   };
 
   const checkCollateralAllowance = async () => {
-    if (collateralIsETH || !signer || !multiCollateralAddress)
+    if (collateralIsETH || !(signer && multiCollateralAddress && address))
       return setIsApproved(true);
     const allowance = await collateralContract.allowance(
       address,
@@ -268,7 +248,13 @@ export default function({ collateralAssets, targetAssetsFilter, short }) {
 
   React.useEffect(() => {
     checkCollateralAllowance(); // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [signer, collateralAmount, collateralContract, multiCollateralAddress]);
+  }, [
+    signer,
+    collateralAmount,
+    collateralContract,
+    multiCollateralAddress,
+    address,
+  ]);
 
   return (
     <Paper className={classes.container}>

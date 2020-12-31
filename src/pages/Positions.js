@@ -1,6 +1,5 @@
 import React from 'react';
 import moment from 'moment';
-import * as ethers from 'ethers';
 import { makeStyles } from '@material-ui/core/styles';
 import {
   Paper,
@@ -15,14 +14,7 @@ import { useWallet } from 'contexts/wallet';
 import Loader from 'components/Loader';
 import { formatUnits } from 'utils/big-number';
 import { useNotifications } from 'contexts/notifications';
-import COLLATERAL_STATE_ABI from 'abis/collateral-state.json';
-import MULTI_COLLATERAL_ERC20_ABI from 'abis/multi-collateral-erc20.json';
-import MULTI_COLLATERAL_ETH_ABI from 'abis/multi-collateral-eth.json';
-import MULTI_COLLATERAL_SHORT_ABI from 'abis/multi-collateral-short.json';
-
-const LOAN_TYPE_ERC20 = 'erc20';
-const LOAN_TYPE_ETH = 'eth';
-const LOAN_TYPE_SHORT = 'short';
+import { LOAN_TYPE_ERC20, LOAN_TYPE_ETH, LOAN_TYPE_SHORT } from 'config';
 
 export const useStyles = makeStyles(theme => ({
   container: {
@@ -66,109 +58,23 @@ export default function() {
   const {
     signer,
     address,
-    config: {
-      erc20CollateralStateAddress,
-      ethCollateralStateAddress,
-      shortCollateralStateAddress,
-      multiCollateralERC20Address,
-      multiCollateralETHAddress,
-      multiCollateralShortAddress,
-    },
+    erc20CollateralStateContract,
+    ethCollateralStateContract,
+    shortCollateralStateContract,
+    collateralContracts,
+    collateralStateContracts,
   } = useWallet();
 
   const [isLoading, setIsLoading] = React.useState(false);
   const [loans, setLoans] = React.useState([]);
-
-  const erc20CollateralStateContract = React.useMemo(
-    () =>
-      signer &&
-      erc20CollateralStateAddress &&
-      new ethers.Contract(
-        erc20CollateralStateAddress,
-        COLLATERAL_STATE_ABI,
-        signer
-      ),
-    [signer, erc20CollateralStateAddress]
-  );
-
-  const ethCollateralStateContract = React.useMemo(
-    () =>
-      signer &&
-      ethCollateralStateAddress &&
-      new ethers.Contract(
-        ethCollateralStateAddress,
-        COLLATERAL_STATE_ABI,
-        signer
-      ),
-    [signer, ethCollateralStateAddress]
-  );
-
-  const shortCollateralStateContract = React.useMemo(
-    () =>
-      signer &&
-      shortCollateralStateAddress &&
-      new ethers.Contract(
-        shortCollateralStateAddress,
-        COLLATERAL_STATE_ABI,
-        signer
-      ),
-    [signer, shortCollateralStateAddress]
-  );
-
-  const erc20CollateralContract = React.useMemo(
-    () =>
-      signer &&
-      multiCollateralERC20Address &&
-      new ethers.Contract(
-        multiCollateralERC20Address,
-        MULTI_COLLATERAL_ERC20_ABI,
-        signer
-      ),
-    [signer, multiCollateralERC20Address]
-  );
-
-  const ethCollateralContract = React.useMemo(
-    () =>
-      signer &&
-      multiCollateralETHAddress &&
-      new ethers.Contract(
-        multiCollateralETHAddress,
-        MULTI_COLLATERAL_ETH_ABI,
-        signer
-      ),
-    [signer, multiCollateralETHAddress]
-  );
-
-  const shortCollateralContract = React.useMemo(
-    () =>
-      signer &&
-      multiCollateralShortAddress &&
-      new ethers.Contract(
-        multiCollateralShortAddress,
-        MULTI_COLLATERAL_SHORT_ABI,
-        signer
-      ),
-    [signer, multiCollateralShortAddress]
-  );
-
-  const contracts = {
-    [LOAN_TYPE_ERC20]: erc20CollateralContract,
-    [LOAN_TYPE_ETH]: ethCollateralContract,
-    [LOAN_TYPE_SHORT]: shortCollateralContract,
-  };
-
-  const stateContracts = {
-    [LOAN_TYPE_ERC20]: erc20CollateralStateContract,
-    [LOAN_TYPE_ETH]: ethCollateralStateContract,
-    [LOAN_TYPE_SHORT]: shortCollateralStateContract,
-  };
 
   const loadLoans = async () => {
     if (
       !(
         erc20CollateralStateContract &&
         ethCollateralStateContract &&
-        shortCollateralStateContract
+        shortCollateralStateContract &&
+        address
       )
     )
       return;
@@ -223,15 +129,16 @@ export default function() {
       !(
         erc20CollateralStateContract &&
         ethCollateralStateContract &&
-        shortCollateralStateContract
+        shortCollateralStateContract &&
+        address
       )
     )
       return () => {};
     const offs = [];
-    for (const type in contracts) {
-      const contract = contracts[type];
+    for (const type in collateralContracts) {
+      const contract = collateralContracts[type];
       const onCreate = async (owner, id) => {
-        const loan = await stateContracts[type].getLoan(owner, id);
+        const loan = await collateralStateContracts[type].getLoan(owner, id);
         setLoans(loans => [{ ...loan, type }, ...loans]);
       };
       const onClose = (owner, id) => {
@@ -255,6 +162,7 @@ export default function() {
     erc20CollateralStateContract,
     ethCollateralStateContract,
     shortCollateralStateContract,
+    address,
   ]);
 
   return !signer ? null : (
@@ -284,7 +192,7 @@ export default function() {
               </TableHead>
               <TableBody>
                 {loans.map(loan => (
-                  <Loan key={loan.id.toString()} {...{ loan, contracts }} />
+                  <Loan key={loan.id.toString()} {...{ loan }} />
                 ))}
               </TableBody>
             </Table>
@@ -295,9 +203,10 @@ export default function() {
   );
 }
 
-function Loan({ loan, contracts }) {
+function Loan({ loan }) {
   const [isClosing, setIsClosing] = React.useState(false);
   const {
+    collateralContracts,
     config: { multiCollateralTokenCurrenciesByAddress },
   } = useWallet();
   const {
@@ -323,7 +232,7 @@ function Loan({ loan, contracts }) {
   const close = async () => {
     try {
       setIsClosing(true);
-      const tx = await contracts[loan.type].close(loan.id);
+      const tx = await collateralContracts[loan.type].close(loan.id);
       showTxNotification(`Closing loan(#${loan.id.toString()})`, tx.hash);
       await tx.wait();
       showSuccessNotification(

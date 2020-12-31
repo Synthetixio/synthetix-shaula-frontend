@@ -70,7 +70,7 @@ function ERC20({ tokenAddress }) {
   };
 
   const load = async () => {
-    if (!contract) return;
+    if (!(contract && address)) return;
     const [decimals, symbol, balance] = await Promise.all([
       contract.decimals(),
       contract.symbol(),
@@ -93,7 +93,7 @@ function ERC20({ tokenAddress }) {
   React.useEffect(() => {
     load();
     return subscribe(); // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [contract]);
+  }, [contract, address]);
 
   return (
     symbol &&
