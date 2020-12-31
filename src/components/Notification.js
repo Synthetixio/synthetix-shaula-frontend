@@ -87,22 +87,11 @@ export default function({ id, notification }) {
 
 function TxContent({ notification }) {
   const classes = useStyles();
-  const { network } = useWallet();
 
   return (
     <>
       <strong className={classes.small}>{notification.description}</strong>
-
-      <a
-        href={`https://${
-          network === 'mainnet' ? '' : `${network}.`
-        }etherscan.io/tx/${notification.hash}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className={classes.small}
-      >
-        View on Etherscan
-      </a>
+      <ViewOnEtherscan hash={notification.hash} />
     </>
   );
 }
@@ -122,10 +111,27 @@ function SuccessContent({ notification }) {
   const classes = useStyles();
   return (
     <>
-      <div>{notification.title}</div>
       <strong className={clsx(classes.small, classes.success)}>
         {notification.message}
       </strong>
+      {!notification.hash ? null : <ViewOnEtherscan hash={notification.hash} />}
     </>
+  );
+}
+
+function ViewOnEtherscan({ hash }) {
+  const classes = useStyles();
+  const { network } = useWallet();
+  return (
+    <a
+      href={`https://${
+        network === 'mainnet' ? '' : `${network}.`
+      }etherscan.io/tx/${hash}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={classes.small}
+    >
+      View on Etherscan
+    </a>
   );
 }

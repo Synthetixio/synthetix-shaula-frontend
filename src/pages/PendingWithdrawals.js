@@ -73,7 +73,6 @@ export default function() {
       );
       await tx.wait();
       showSuccessNotification(
-        'Done',
         `You have successfully withdrawn ${formatUnits(
           pendingWithdrawals,
           18

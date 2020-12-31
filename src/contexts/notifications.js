@@ -25,12 +25,12 @@ export function NotificationsProvider({ children }) {
       }
     );
 
-  const showSuccessNotification = (title, message) =>
+  const showSuccessNotification = (message, hash) =>
     enqueueSnackbar(
       {
         type: 'success',
-        title,
         message,
+        hash,
       },
       {
         persist: true,

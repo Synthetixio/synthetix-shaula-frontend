@@ -134,7 +134,6 @@ function Owing({ exchangerContract, loadOwings, reclaimAmount, currency }) {
       showTxNotification(`Settling ${currency} owed.`, tx.hash);
       await tx.wait();
       showSuccessNotification(
-        'Done',
         `You have successfully settled ${currency} owed.`
       );
       await sleep(1000);
