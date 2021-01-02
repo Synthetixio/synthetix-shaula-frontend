@@ -10,6 +10,7 @@ import {
 } from '@material-ui/icons';
 import { useSnackbar } from 'notistack';
 import { useWallet } from 'contexts/wallet';
+import { INFO_COLOR, DANGER_COLOR, SUCCESS_COLOR } from 'config';
 
 const useStyles = makeStyles(theme => ({
   paper: {
@@ -37,13 +38,13 @@ const useStyles = makeStyles(theme => ({
     cursor: 'pointer',
   },
   tx: {
-    background: '#2196f3',
+    background: INFO_COLOR,
   },
   error: {
-    background: '#d32f2f',
+    background: DANGER_COLOR,
   },
   success: {
-    background: '#43a047',
+    background: SUCCESS_COLOR,
   },
   small: {
     fontSize: 12,

@@ -9,3 +9,7 @@ export const BORDER_RADIUS = 8;
 export const LOAN_TYPE_ERC20 = 'erc20';
 export const LOAN_TYPE_ETH = 'eth';
 export const LOAN_TYPE_SHORT = 'short';
+
+export const INFO_COLOR = '#2196f3';
+export const SUCCESS_COLOR = '#43a047';
+export const DANGER_COLOR = '#d32f2f';
