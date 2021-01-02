@@ -312,7 +312,7 @@ function Loan({ loan }) {
               <div className="text-center">
                 Position will be at risk of liquidation
                 <br />
-                if its CRatio falls below the minimum of{' '}
+                if cratio falls below the minimum of{' '}
                 {formatUnits(loan.minCRatio, 16, 0)}.
               </div>
             }

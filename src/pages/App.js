@@ -1,7 +1,10 @@
 import React from 'react';
 import clsx from 'clsx';
 import { makeStyles } from '@material-ui/core/styles';
+import { Box } from '@material-ui/core';
 
+import { useWallet } from 'contexts/wallet';
+import Loader from 'components/Loader';
 import Header from './Header';
 import Borrow from './Borrow';
 import Short from './Short';
@@ -41,26 +44,31 @@ const useStyles = makeStyles(theme => ({
 
 export default function App() {
   const classes = useStyles();
+  const { isLoaded: walletIsLoaded } = useWallet();
 
   return (
     <div className={classes.container}>
       <Header />
-
-      <div className={clsx(classes.grid, classes.mb)}>
-        <Borrow />
-        <Short />
-      </div>
-
-      <div className={clsx(classes.grid, classes.mb)}>
-        <PendingWithdrawals />
-        <Owings />
-      </div>
-
-      <div className={clsx(classes.mb)}>
-        <Positions />
-      </div>
-
-      <WrongNetwork />
+      {!walletIsLoaded ? (
+        <Box pt={20}>
+          <Loader />
+        </Box>
+      ) : (
+        <>
+          <div className={clsx(classes.grid, classes.mb)}>
+            <Borrow />
+            <Short />
+          </div>
+          <div className={clsx(classes.grid, classes.mb)}>
+            <PendingWithdrawals />
+            <Owings />
+          </div>
+          <div className={clsx(classes.mb)}>
+            <Positions />
+          </div>
+          <WrongNetwork />{' '}
+        </>
+      )}
     </div>
   );
 }
