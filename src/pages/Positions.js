@@ -83,109 +83,131 @@ export default function() {
   const [isLoading, setIsLoading] = React.useState(false);
   const [loans, setLoans] = React.useState([]);
 
-  const getLoanIndices = async type => {
-    const [n, minCRatio] = await Promise.all([
-      collateralStateContracts[type].getNumLoans(address),
-      collateralContracts[type].minCratio(),
-    ]);
-    const loanIndices = [];
-    for (let i = 0; i < n; i++) {
-      loanIndices.push(i);
-    }
-    return { type, minCRatio, loanIndices };
-  };
+  React.useEffect(() => {
+    let isMounted = true;
+    const unsubs = [];
 
-  const getLoans = async ({ type, minCRatio, loanIndices }) => {
-    return Promise.all(loanIndices.map(getLoan.bind(null, type, minCRatio)));
-  };
-
-  const getLoan = async (type, minCRatio, loanIndex) => {
-    return {
-      type,
-      minCRatio,
-      loan: await collateralStateContracts[type].loans(address, loanIndex),
+    const getLoanIndices = async type => {
+      const [n, minCRatio] = await Promise.all([
+        collateralStateContracts[type].getNumLoans(address),
+        collateralContracts[type].minCratio(),
+      ]);
+      const loanIndices = [];
+      for (let i = 0; i < n; i++) {
+        loanIndices.push(i);
+      }
+      return { type, minCRatio, loanIndices };
     };
-  };
 
-  const loadLoans = async () => {
-    if (
-      !(
-        erc20CollateralStateContract &&
-        ethCollateralStateContract &&
-        shortCollateralStateContract &&
-        address
+    const getLoans = async ({ type, minCRatio, loanIndices }) => {
+      return Promise.all(loanIndices.map(getLoan.bind(null, type, minCRatio)));
+    };
+
+    const getLoan = async (type, minCRatio, loanIndex) => {
+      return {
+        type,
+        minCRatio,
+        loan: await collateralStateContracts[type].loans(address, loanIndex),
+      };
+    };
+
+    const makeLoan = async ({ loan, type, minCRatio }) => {
+      return {
+        ...loan,
+        type,
+        minCRatio,
+        cratio: await collateralContracts[type].collateralRatio(loan),
+      };
+    };
+
+    const loadLoans = async () => {
+      if (
+        !(
+          erc20CollateralStateContract &&
+          ethCollateralStateContract &&
+          shortCollateralStateContract &&
+          address
+        )
       )
-    )
-      return;
-    setIsLoading(true);
+        return;
+      setIsLoading(true);
 
-    const loanIndices = await Promise.all(
-      Object.keys(collateralStateContracts).map(getLoanIndices)
-    );
-    const loans = await Promise.all(loanIndices.map(getLoans));
-    const activeLoans = [];
-    for (let i = 0; i < loans.length; i++) {
-      for (let j = 0; j < loans[i].length; j++) {
-        const { type, minCRatio, loan } = loans[i][j];
-        if (!loan.amount.isZero()) {
-          activeLoans.push({
-            ...loan,
-            type,
-            minCRatio,
-            cratio: await collateralContracts[type].collateralRatio(loan),
-          });
+      const loanIndices = await Promise.all(
+        Object.keys(collateralStateContracts).map(getLoanIndices)
+      );
+      const loans = await Promise.all(loanIndices.map(getLoans));
+      const activeLoans = [];
+      for (let i = 0; i < loans.length; i++) {
+        for (let j = 0; j < loans[i].length; j++) {
+          const { type, minCRatio, loan } = loans[i][j];
+          if (!loan.amount.isZero()) {
+            activeLoans.push(
+              await makeLoan({
+                loan,
+                type,
+                minCRatio,
+              })
+            );
+          }
         }
       }
-    }
-    activeLoans.sort((a, b) => {
-      if (a.id.gt(b.id)) return -1;
-      if (a.id.lt(b.id)) return 1;
-      return 0;
-    });
-    setLoans(activeLoans);
-    setIsLoading(false);
-  };
-
-  // subscribe to loan open+close
-  const subscribe = () => {
-    if (
-      !(
-        erc20CollateralStateContract &&
-        ethCollateralStateContract &&
-        shortCollateralStateContract &&
-        address
-      )
-    )
-      return () => {};
-    const offs = [];
-    for (const type in collateralContracts) {
-      const contract = collateralContracts[type];
-      const onCreate = async (owner, id) => {
-        const loan = await collateralStateContracts[type].getLoan(owner, id);
-        setLoans(loans => [{ ...loan, type }, ...loans]);
-      };
-      const onClose = (owner, id) => {
-        setLoans(loans => loans.filter(loan => !loan.id.eq(id)));
-      };
-      const loanCreatedEvent = contract.filters.LoanCreated(address);
-      const loanClosedEvent = contract.filters.LoanClosed(address);
-      contract.on(loanCreatedEvent, onCreate);
-      contract.on(loanClosedEvent, onClose);
-      offs.push(() => contract.off(loanCreatedEvent, onCreate));
-      offs.push(() => contract.off(loanClosedEvent, onClose));
-    }
-    return () => {
-      offs.forEach(off => off());
+      activeLoans.sort((a, b) => {
+        if (a.id.gt(b.id)) return -1;
+        if (a.id.lt(b.id)) return 1;
+        return 0;
+      });
+      if (isMounted) {
+        setLoans(activeLoans);
+        setIsLoading(false);
+      }
     };
-  };
-  React.useEffect(() => {
+
+    // subscribe to loan open+close
+    const subscribe = () => {
+      if (
+        !(
+          erc20CollateralStateContract &&
+          ethCollateralStateContract &&
+          shortCollateralStateContract &&
+          address
+        )
+      )
+        return () => {};
+      for (const type in collateralContracts) {
+        const contract = collateralContracts[type];
+        const onCreate = async (owner, id) => {
+          const loan = await makeLoan({
+            loan: await collateralStateContracts[type].getLoan(owner, id),
+            type,
+            minCRatio: await collateralContracts[type].minCratio(),
+          });
+          setLoans(loans => [loan, ...loans]);
+        };
+        const onClose = (owner, id) => {
+          setLoans(loans => loans.filter(loan => !loan.id.eq(id)));
+        };
+        const loanCreatedEvent = contract.filters.LoanCreated(address);
+        const loanClosedEvent = contract.filters.LoanClosed(address);
+        contract.on(loanCreatedEvent, onCreate);
+        contract.on(loanClosedEvent, onClose);
+        unsubs.push(() => contract.off(loanCreatedEvent, onCreate));
+        unsubs.push(() => contract.off(loanClosedEvent, onClose));
+      }
+    };
+
     loadLoans();
-    return subscribe(); // eslint-disable-next-line react-hooks/exhaustive-deps
+    subscribe();
+    return () => {
+      isMounted = false;
+      unsubs.forEach(unsub => unsub());
+    };
   }, [
     erc20CollateralStateContract,
     ethCollateralStateContract,
     shortCollateralStateContract,
     address,
+    collateralContracts,
+    collateralStateContracts,
   ]);
 
   return !signer ? null : (

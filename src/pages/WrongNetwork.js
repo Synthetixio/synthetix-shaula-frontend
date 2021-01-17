@@ -4,7 +4,6 @@ import { makeStyles } from '@material-ui/core/styles';
 import { Dialog, Button } from '@material-ui/core';
 import { Close as Icon } from '@material-ui/icons';
 import { useWallet } from 'contexts/wallet';
-import NETWORKS from 'networks.json';
 
 const useStyles = makeStyles(theme => ({
   container: {
@@ -38,10 +37,12 @@ const useStyles = makeStyles(theme => ({
 
 export default function() {
   const classes = useStyles();
-  const { network } = useWallet();
+  const { availableNetworkNames, network } = useWallet();
   const isOnCorrectNetwork = React.useMemo(
-    () => !network || network in NETWORKS,
-    [network]
+    () =>
+      !(network && availableNetworkNames) ||
+      ~availableNetworkNames.indexOf(network),
+    [network, availableNetworkNames]
   );
   const onChange = () => window.location.reload();
 
@@ -86,7 +87,7 @@ export default function() {
           <div>You are connected to the wrong network.</div>
 
           <strong>
-            Please connect to {Object.keys(NETWORKS).join(' or ')}.
+            Please connect to {availableNetworkNames.join(' or ')}.
           </strong>
 
           <Button

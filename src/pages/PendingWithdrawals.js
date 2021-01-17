@@ -79,7 +79,11 @@ export default function() {
         )} ETH.`
       );
       await sleep(1000);
-      await loadPendingWithdrawals();
+
+      setIsLoading(true);
+      const pw = await ethCollateralContract.pendingWithdrawals(address);
+      setPendingWithdrawals(pw);
+      setIsLoading(false);
     } catch (e) {
       showErrorNotification(e);
     } finally {
@@ -87,17 +91,18 @@ export default function() {
     }
   };
 
-  const loadPendingWithdrawals = async () => {
-    if (!(ethCollateralContract && address)) return;
-    setIsLoading(true);
-    setPendingWithdrawals(
-      await ethCollateralContract.pendingWithdrawals(address)
-    );
-    setIsLoading(false);
-  };
-
   React.useEffect(() => {
-    loadPendingWithdrawals(); // eslint-disable-next-line react-hooks/exhaustive-deps
+    let isMounted = true;
+    (async () => {
+      if (!(ethCollateralContract && address)) return;
+      setIsLoading(true);
+      const pw = await ethCollateralContract.pendingWithdrawals(address);
+      if (isMounted) {
+        setPendingWithdrawals(pw);
+        setIsLoading(false);
+      }
+    })();
+    return () => (isMounted = false);
   }, [ethCollateralContract, address]);
 
   return !signer ? null : (

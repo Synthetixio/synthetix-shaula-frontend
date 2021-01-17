@@ -192,7 +192,14 @@ export default function({ collateralAssets, targetAssetsFilter, short }) {
       showTxNotification(`Approving ${collateralName}`, tx.hash);
       await tx.wait();
       showSuccessNotification(`Approved ${collateralName}`, tx.hash);
-      await checkCollateralAllowance();
+
+      if (collateralIsETH || !(signer && multiCollateralAddress && address))
+        return setIsApproved(true);
+      const allowance = await collateralContract.allowance(
+        address,
+        multiCollateralAddress
+      );
+      setIsApproved(allowance.gte(collateralAmount));
     } catch (e) {
       showErrorNotification(e);
     } finally {
@@ -236,24 +243,28 @@ export default function({ collateralAssets, targetAssetsFilter, short }) {
     }
   };
 
-  const checkCollateralAllowance = async () => {
-    if (collateralIsETH || !(signer && multiCollateralAddress && address))
-      return setIsApproved(true);
-    const allowance = await collateralContract.allowance(
-      address,
-      multiCollateralAddress
-    );
-    setIsApproved(allowance.gte(collateralAmount));
-  };
-
   React.useEffect(() => {
-    checkCollateralAllowance(); // eslint-disable-next-line react-hooks/exhaustive-deps
+    let isMounted = true;
+    (async () => {
+      if (
+        collateralIsETH ||
+        !(collateralContract && multiCollateralAddress && address)
+      ) {
+        return setIsApproved(true);
+      }
+      const allowance = await collateralContract.allowance(
+        address,
+        multiCollateralAddress
+      );
+      if (isMounted) setIsApproved(allowance.gte(collateralAmount));
+    })();
+    return () => (isMounted = false);
   }, [
-    signer,
-    collateralAmount,
+    collateralIsETH,
     collateralContract,
-    multiCollateralAddress,
     address,
+    multiCollateralAddress,
+    collateralAmount,
   ]);
 
   return (

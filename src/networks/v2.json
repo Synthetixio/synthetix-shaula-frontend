@@ -1,0 +1,110 @@
+{
+  "mainnet": {
+    "tokens": {
+      "sBTC": [
+        18,
+        "0xfE18be6b3Bd88A2D2A7f928d00292E7a9963CfC6"
+      ],
+      "sETH": [
+        18,
+        "0x5e74C9036fb86BD7eCdcb084a0673EFc32eA31cb"
+      ],
+      "sUSD": [
+        18,
+        "0x57Ab1ec28D129707052df4dF418D58a2D46d5f51"
+      ],
+      "renBTC": [
+        8,
+        "0xEB4C2781e4ebA804CE9a9803C67d0893436bB27D"
+      ],
+      "ETH": [
+        18,
+        "0xee"
+      ]
+    },
+    "multiCollateralTokenCurrencies": {
+      "sBTC": "0x7342544300000000000000000000000000000000000000000000000000000000",
+      "sETH": "0x7345544800000000000000000000000000000000000000000000000000000000",
+      "sUSD": "0x7355534400000000000000000000000000000000000000000000000000000000"
+    },
+    "multiCollateralERC20Address": "0xaa03aB31b55DceEeF845C8d17890CC61cD98eD04",
+    "multiCollateralETHAddress": "0x5c8344bcdC38F1aB5EB5C1d4a35DdEeA522B5DfA",
+    "multiCollateralShortAddress": "0x1F2c3a1046c32729862fcB038369696e3273a516",
+    "erc20CollateralStateAddress": "0x8A1A00Df7aA0102497C7591912bA8301e8dB8CdB",
+    "ethCollateralStateAddress": "0xbe5B5a7c198bC156474ed5c33CBf2F3F604F8fF8",
+    "shortCollateralStateAddress": "0x13A114a3Fa8A6CE03a0C5488BE9e614d78eDdb0c",
+    "exchangerAddress": "0x0bfDc04B38251394542586969E2356d0D731f7DE"
+  },
+  "kovan": {
+    "tokens": {
+      "sBTC": [
+        18,
+        "0x3Aa2d4A15aA7F50158DEEAE0208F862a461f19Cf"
+      ],
+      "sETH": [
+        18,
+        "0x54c4B5cb58C880DD1734123c8b588e49eDf442Fb"
+      ],
+      "sUSD": [
+        18,
+        "0x57Ab1ec28D129707052df4dF418D58a2D46d5f51"
+      ],
+      "renBTC": [
+        8,
+        "0x9B2fE385cEDea62D839E4dE89B0A23EF4eacC717"
+      ],
+      "ETH": [
+        18,
+        "0xee"
+      ]
+    },
+    "multiCollateralTokenCurrencies": {
+      "sBTC": "0x7342544300000000000000000000000000000000000000000000000000000000",
+      "sETH": "0x7345544800000000000000000000000000000000000000000000000000000000",
+      "sUSD": "0x7355534400000000000000000000000000000000000000000000000000000000"
+    },
+    "multiCollateralERC20Address": "0x5AD5469D8A1Eee2cF7c8B8205CbeD95A032cdff3",
+    "multiCollateralETHAddress": "0xdFd01d828D34982DFE882B9fDC6DC17fcCA33C25",
+    "multiCollateralShortAddress": "0x9712DdCC43F42402acC483e297eeFf650d18D354",
+    "erc20CollateralStateAddress": "0x04C3f6207BE48De777967eB1886469E4E268FE07",
+    "ethCollateralStateAddress": "0x4B58bbB4Ff947315b558904fDcEbbdA65b9523aD",
+    "shortCollateralStateAddress": "0xd74E3A605A1a7A8a83D25DF00D4057985E3CAC30",
+    "exchangerAddress": "0xF49528689234d46724383669BD8658bfB47f8575"
+  },
+  "rinkeby": {
+    "tokens": {
+      "sBTC": [
+        18,
+        "0x27861E4776D162743ccD78379aDe6A876caf2203"
+      ],
+      "sETH": [
+        18,
+        "0xA83AbFdC9E8Ee990C3C6C0f56a4B06e0faAd583C"
+      ],
+      "sUSD": [
+        18,
+        "0x1150FcF21c5fb154e971fb526A0A777907F87579"
+      ],
+      "renBTC": [
+        8,
+        "0xEDC0C23864B041607D624E2d9a67916B6cf40F7a"
+      ],
+      "ETH": [
+        18,
+        "0xee"
+      ]
+    },
+    "multiCollateralTokenCurrencies": {
+      "sBTC": "0x7342544300000000000000000000000000000000000000000000000000000000",
+      "sETH": "0x7345544800000000000000000000000000000000000000000000000000000000",
+      "sUSD": "0x7355534400000000000000000000000000000000000000000000000000000000"
+    },
+    "multiCollateralERC20Address": "0x3c88F556807ec4779BB24fE8FAB81Df4ABBdfed8",
+    "multiCollateralETHAddress": "0x812b08B097faAA3D72034Ab639EEba063aebA1ab",
+    "multiCollateralShortAddress": "0x852a385B32C2F226476500Cc303EB014448B66FB",
+    "erc20CollateralStateAddress": "0xe2fd57caF070A3F995D597a8B21cbF206E34Ff38",
+    "ethCollateralStateAddress": "0x8f28322A3e85296D00dc3c378519AaB7f570bA79",
+    "shortCollateralStateAddress": "0xFAdbaf925eC35D97ae3EB87b458d005Dfd4C4b52",
+    "exchangerAddress": "0x0260F7587a73815E3747Ce3D31FAF1383E1B653a"
+  }
+}

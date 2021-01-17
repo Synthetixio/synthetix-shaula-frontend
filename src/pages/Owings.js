@@ -62,26 +62,30 @@ export default function() {
     [owings]
   );
 
-  const loadOwings = async () => {
-    if (!(exchangerContract && multiCollateralTokenCurrencies && address))
-      return;
-    setIsLoading(true);
-    const owings = [];
-    for (const currency in multiCollateralTokenCurrencies) {
-      owings.push({
-        currency,
-        ...(await exchangerContract.settlementOwing(
-          address,
-          multiCollateralTokenCurrencies[currency]
-        )),
-      });
-    }
-    setOwings(owings);
-    setIsLoading(false);
-  };
+  const loadOwings = async () => {};
 
   React.useEffect(() => {
-    loadOwings(); // eslint-disable-next-line react-hooks/exhaustive-deps
+    let isMounted = true;
+    (async () => {
+      if (!(exchangerContract && multiCollateralTokenCurrencies && address)) {
+        return setIsLoading(true);
+      }
+      const owings = [];
+      for (const currency in multiCollateralTokenCurrencies) {
+        owings.push({
+          currency,
+          ...(await exchangerContract.settlementOwing(
+            address,
+            multiCollateralTokenCurrencies[currency]
+          )),
+        });
+      }
+      if (isMounted) {
+        setOwings(owings);
+        setIsLoading(false);
+      }
+    })();
+    return () => (isMounted = false);
   }, [exchangerContract, multiCollateralTokenCurrencies, address]);
 
   return !signer ? null : (

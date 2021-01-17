@@ -21,22 +21,29 @@ function ETH() {
   const { signer } = useWallet();
   const [balance, setBalance] = React.useState(ethers.BigNumber.from('0'));
 
-  const load = async () => {
-    setBalance(await signer.getBalance());
-  };
-
-  const subscribe = () => {
-    const eventName = 'block';
-    signer.provider.on(eventName, load);
-    return () => {
-      signer.provider.off(eventName, load);
-    };
-  };
-
   React.useEffect(() => {
-    load();
-    return subscribe(); // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    if (!signer) return;
+
+    let isMounted = true;
+    const unsubs = [];
+
+    const onSetBalance = async () => {
+      if (isMounted) setBalance(await signer.getBalance());
+    };
+
+    const subscribe = () => {
+      const newBlockEvent = 'block';
+      signer.provider.on(newBlockEvent, onSetBalance);
+      unsubs.push(() => signer.provider.off(newBlockEvent, onSetBalance));
+    };
+
+    onSetBalance();
+    subscribe();
+    return () => {
+      isMounted = false;
+      unsubs.forEach(unsub => unsub());
+    };
+  }, [signer]);
 
   return (
     balance && (
@@ -62,37 +69,42 @@ function ERC20({ tokenAddress }) {
     [tokenAddress, signer]
   );
 
-  const onBalanceChange = async (from, to) => {
-    if (from === address || to === address) {
-      await sleep(1000);
-      setBalance(await contract.balanceOf(address));
-    }
-  };
-
-  const load = async () => {
-    if (!(contract && address)) return;
-    const [decimals, symbol, balance] = await Promise.all([
-      contract.decimals(),
-      contract.symbol(),
-      contract.balanceOf(address),
-    ]);
-    setDecimals(decimals);
-    setSymbol(symbol);
-    setBalance(balance);
-  };
-
-  const subscribe = () => {
-    if (!contract) return () => {};
-    const transferEvent = contract.filters.Transfer();
-    contract.on(transferEvent, onBalanceChange);
-    return () => {
-      contract.off(transferEvent, onBalanceChange);
-    };
-  };
-
   React.useEffect(() => {
-    load();
-    return subscribe(); // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (!(contract && address)) return;
+
+    let isMounted = true;
+    const unsubs = [];
+
+    const loadBalance = async () => {
+      const [decimals, symbol, balance] = await Promise.all([
+        contract.decimals(),
+        contract.symbol(),
+        contract.balanceOf(address),
+      ]);
+      setDecimals(decimals);
+      setSymbol(symbol);
+      setBalance(balance);
+    };
+
+    const subscribe = () => {
+      const transferEvent = contract.filters.Transfer();
+      const onBalanceChange = async (from, to) => {
+        if (from === address || to === address) {
+          await sleep(1000);
+          if (isMounted) setBalance(await contract.balanceOf(address));
+        }
+      };
+
+      contract.on(transferEvent, onBalanceChange);
+      unsubs.push(() => contract.off(transferEvent, onBalanceChange));
+    };
+
+    loadBalance();
+    subscribe();
+    return () => {
+      isMounted = false;
+      unsubs.forEach(unsub => unsub());
+    };
   }, [contract, address]);
 
   return (

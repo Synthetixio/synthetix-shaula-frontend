@@ -6,6 +6,7 @@ const fetch = require('node-fetch');
 const MULTI_COLLATERAL_ERC20_ABI = require('../src/abis/multi-collateral-erc20.json');
 
 const INFURA_ID = process.env.REACT_APP_INFURA_ID;
+const VERSION = 'v2';
 
 const NETWORKS = [
   'mainnet',
@@ -26,7 +27,7 @@ async function main() {
   const networks = await Promise.all(NETWORKS.map(getNetworkConfig));
 
   fs.writeFileSync(
-    path.join(__dirname, '../src/networks.json'),
+    path.join(__dirname, `../src/networks/${VERSION}.json`),
     JSON.stringify(
       networks.reduce((r, a, i) => {
         r[NETWORKS[i]] = a;

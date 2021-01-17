@@ -6,9 +6,11 @@ import {
   LOAN_TYPE_ERC20,
   LOAN_TYPE_ETH,
   LOAN_TYPE_SHORT,
+  // INFURA_ID,
 } from 'config';
 import cache from 'utils/cache';
-import NETWORKS from 'networks.json';
+import NETWORKS_V1 from 'networks/v1.json';
+import NETWORKS_V2 from 'networks/v2.json';
 import COLLATERAL_STATE_ABI from 'abis/collateral-state.json';
 import MULTI_COLLATERAL_ERC20_ABI from 'abis/multi-collateral-erc20.json';
 import MULTI_COLLATERAL_ETH_ABI from 'abis/multi-collateral-eth.json';
@@ -16,6 +18,20 @@ import MULTI_COLLATERAL_SHORT_ABI from 'abis/multi-collateral-short.json';
 import EXCHANGER_ABI from 'abis/exchanger.json';
 
 const DEFAULT_NETWORK_ID = 1;
+
+const WALLETS = [
+  { walletName: 'metamask', preferred: true },
+  // {
+  //   walletName: 'walletConnect',
+  //   infuraKey: INFURA_ID,
+  //   preferred: true,
+  // },
+];
+
+const NETWORKS = {
+  1: NETWORKS_V1,
+  2: NETWORKS_V2,
+};
 
 const WalletContext = React.createContext(null);
 
@@ -26,11 +42,12 @@ export function WalletProvider({ children }) {
   const [address, setAddress] = React.useState(null);
   const [signer, setSigner] = React.useState(null);
   const [network, setNetwork] = React.useState('');
+  const [version, setVersion] = React.useState(2);
 
   const cfg = React.useMemo(() => {
     if (!network) return {};
 
-    const cfg = NETWORKS[network];
+    const cfg = NETWORKS[version][network];
     if (!cfg) return {};
 
     const multiCollateralTokenCurrenciesByAddress = Object.entries(
@@ -41,7 +58,7 @@ export function WalletProvider({ children }) {
     }, {});
 
     return { ...cfg, multiCollateralTokenCurrenciesByAddress };
-  }, [network]);
+  }, [network, version]);
 
   const erc20CollateralStateContract = React.useMemo(
     () =>
@@ -135,51 +152,57 @@ export function WalletProvider({ children }) {
     [signer, cfg.exchangerAddress]
   );
 
-  async function connect(tryCached) {
-    if (address) return;
+  const connect = React.useCallback(
+    async tryCached => {
+      if (address) return;
 
-    let cachedWallet;
-    if (tryCached) {
-      cachedWallet = cache(CACHE_WALLET_KEY);
-      if (!cachedWallet) return;
-    }
+      let cachedWallet;
+      if (tryCached) {
+        cachedWallet = cache(CACHE_WALLET_KEY);
+        if (!cachedWallet) return;
+      }
 
-    if (!onboard) {
-      onboard = Onboard({
-        networkId: await getDefaultNetworkId(),
+      if (!onboard) {
+        onboard = Onboard({
+          networkId: await getDefaultNetworkId(),
+          walletSelect: {
+            wallets: WALLETS,
+          },
+        });
+      }
+
+      if (
+        !(cachedWallet
+          ? await onboard.walletSelect(cachedWallet)
+          : await onboard.walletSelect())
+      )
+        return;
+      await onboard.walletCheck();
+
+      const {
+        wallet: { name: walletName, provider: web3Provider },
+      } = onboard.getState();
+
+      cache(CACHE_WALLET_KEY, walletName);
+
+      web3Provider.on('accountsChanged', () => {
+        window.location.reload();
       });
-    }
+      web3Provider.on('chainChanged', () => {
+        window.location.reload();
+      });
+      // web3Provider.on('disconnect', () => {
+      //   disconnect();
+      // });
 
-    if (
-      !(cachedWallet
-        ? await onboard.walletSelect(cachedWallet)
-        : await onboard.walletSelect())
-    )
-      return;
-    await onboard.walletCheck();
+      const provider = new ethers.providers.Web3Provider(web3Provider);
+      const signer = provider.getSigner();
 
-    const {
-      wallet: { name: walletName, provider: web3Provider },
-    } = onboard.getState();
-
-    cache(CACHE_WALLET_KEY, walletName);
-
-    web3Provider.on('accountsChanged', () => {
-      window.location.reload();
-    });
-    web3Provider.on('chainChanged', () => {
-      window.location.reload();
-    });
-    // web3Provider.on('disconnect', () => {
-    //   disconnect();
-    // });
-
-    const provider = new ethers.providers.Web3Provider(web3Provider);
-    const signer = provider.getSigner();
-
-    setSigner(signer);
-    setAddress(await signer.getAddress());
-  }
+      setSigner(signer);
+      setAddress(await signer.getAddress());
+    },
+    [address]
+  );
 
   async function disconnect() {
     cache(CACHE_WALLET_KEY, null);
@@ -187,24 +210,26 @@ export function WalletProvider({ children }) {
     setSigner(null);
   }
 
-  async function load() {
-    await connect(true);
-    setIsLoaded(true);
-  }
-
-  async function setNetworkName() {
+  React.useEffect(() => {
     if (!signer) return;
-    const net = await signer.provider.getNetwork();
-    setNetwork(~['homestead'].indexOf(net.name) ? 'mainnet' : net.name);
-  }
+    let isMounted = true;
+    (async () => {
+      const net = await signer.provider.getNetwork();
+      if (isMounted) {
+        setNetwork(~['homestead'].indexOf(net.name) ? 'mainnet' : net.name);
+      }
+    })();
+    return () => (isMounted = false);
+  }, [signer]);
 
   React.useEffect(() => {
-    setNetworkName();
-  }, [signer]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  React.useEffect(() => {
-    load();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    let isMounted = true;
+    (async () => {
+      await connect(true);
+      if (isMounted) setIsLoaded(true);
+    })();
+    return () => (isMounted = false);
+  }, [connect]);
 
   return (
     <WalletContext.Provider
@@ -216,6 +241,8 @@ export function WalletProvider({ children }) {
         config: cfg,
         network,
         signer,
+        version,
+        setVersion,
 
         erc20CollateralContract,
         ethCollateralContract,
@@ -248,6 +275,8 @@ export function useWallet() {
     config,
     network,
     signer,
+    version,
+    setVersion,
 
     erc20CollateralContract,
     ethCollateralContract,
@@ -270,6 +299,9 @@ export function useWallet() {
     config,
     network,
     signer,
+    version,
+    setVersion,
+    availableNetworkNames: Object.keys(NETWORKS[version]),
 
     erc20CollateralContract,
     ethCollateralContract,
