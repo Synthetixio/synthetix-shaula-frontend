@@ -6,7 +6,7 @@ import {
   LOAN_TYPE_ERC20,
   LOAN_TYPE_ETH,
   LOAN_TYPE_SHORT,
-  // INFURA_ID,
+  INFURA_ID,
 } from 'config';
 import cache from 'utils/cache';
 import NETWORKS_V1 from 'networks/v1.json';
@@ -21,11 +21,11 @@ const DEFAULT_NETWORK_ID = 1;
 
 const WALLETS = [
   { walletName: 'metamask', preferred: true },
-  // {
-  //   walletName: 'walletConnect',
-  //   infuraKey: INFURA_ID,
-  //   preferred: true,
-  // },
+  {
+    walletName: 'walletConnect',
+    infuraKey: INFURA_ID,
+    preferred: true,
+  },
 ];
 
 const NETWORKS = {
@@ -183,7 +183,9 @@ export function WalletProvider({ children }) {
         wallet: { name: walletName, provider: web3Provider },
       } = onboard.getState();
 
-      cache(CACHE_WALLET_KEY, walletName);
+      if (~walletName.indexOf('MetaMask')) {
+        cache(CACHE_WALLET_KEY, walletName);
+      }
 
       web3Provider.on('accountsChanged', () => {
         window.location.reload();
