@@ -28,7 +28,8 @@ function ETH() {
     const unsubs = [];
 
     const onSetBalance = async () => {
-      if (isMounted) setBalance(await signer.getBalance());
+      const balance = await signer.getBalance();
+      if (isMounted) setBalance(balance);
     };
 
     const subscribe = () => {
