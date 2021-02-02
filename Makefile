@@ -13,11 +13,11 @@ deploy-ipfs:
 node_modules:
 	@yarn
 
-gen-net-cfg:
-	@node bin/networks.js 
+networks:
+	@node bin/$@.js 
 
 .PHONY: \
 	run \
 	deploy \
 	deploy-ipfs \
-	gen-net-cfg
+	networks
