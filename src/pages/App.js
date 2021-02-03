@@ -13,34 +13,34 @@ import PendingWithdrawals from './PendingWithdrawals';
 import Owings from './Owings';
 import WrongNetwork from './WrongNetwork';
 
-const MARGIN = 14;
+const MARGIN = 2;
 
-const useStyles = makeStyles(theme => ({
-  container: {
-    width: '960px',
-    margin: '0 auto',
-    padding: '100px 0 30px',
-    position: 'relative',
-    [theme.breakpoints.down('sm')]: {
-      padding: '70px 0 10px',
-      width: 'auto',
+const useStyles = makeStyles(theme => {
+  const margin = theme.spacing(MARGIN);
+  return {
+    container: {
+      width: '960px',
+      margin: '0 auto',
+      padding: '100px 0 30px',
+      position: 'relative',
+      [theme.breakpoints.down('sm')]: {
+        padding: '70px 0 10px',
+        width: 'auto',
+      },
     },
-  },
-  grid: {
-    display: 'grid',
-    columnGap: `${MARGIN}px`,
-    gridTemplateColumns: '1fr 1fr',
-    [theme.breakpoints.down('sm')]: {
-      columnGap: 0,
-      gridTemplateColumns: 'none',
-      rowGap: `${MARGIN}px`,
-      gridTemplateRows: '1fr 1fr',
+    grid: {
+      display: 'grid',
+      columnGap: `${margin}px`,
+      gridTemplateColumns: '1fr 1fr',
+      [theme.breakpoints.down('sm')]: {
+        columnGap: 0,
+        gridTemplateColumns: 'none',
+        rowGap: `${margin}px`,
+        gridTemplateRows: '1fr 1fr',
+      },
     },
-  },
-  mb: {
-    marginBottom: MARGIN,
-  },
-}));
+  };
+});
 
 export default function App() {
   const classes = useStyles();
@@ -55,18 +55,18 @@ export default function App() {
         </Box>
       ) : (
         <>
-          <div className={clsx(classes.grid, classes.mb)}>
+          <Box mb={MARGIN} className={clsx(classes.grid)}>
             <Borrow />
             <Short />
-          </div>
-          <div className={clsx(classes.grid, classes.mb)}>
+          </Box>
+          <Box mb={MARGIN} className={clsx(classes.grid)}>
             <PendingWithdrawals />
             <Owings />
-          </div>
-          <div className={clsx(classes.mb)}>
+          </Box>
+          <Box mb={MARGIN}>
             <Positions />
-          </div>
-          <WrongNetwork />{' '}
+          </Box>
+          <WrongNetwork />
         </>
       )}
     </div>
