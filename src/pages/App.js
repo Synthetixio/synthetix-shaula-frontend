@@ -11,6 +11,7 @@ import Short from './Short';
 import Positions from './Positions';
 import PendingWithdrawals from './PendingWithdrawals';
 import Owings from './Owings';
+import Rewards from './Rewards';
 import WrongNetwork from './WrongNetwork';
 
 const MARGIN = 2;
@@ -19,8 +20,7 @@ const useStyles = makeStyles(theme => {
   const margin = theme.spacing(MARGIN);
   return {
     container: {
-      width: '960px',
-      margin: '0 auto',
+      margin: '0 50px',
       padding: '100px 0 30px',
       position: 'relative',
       [theme.breakpoints.down('sm')]: {
@@ -28,7 +28,7 @@ const useStyles = makeStyles(theme => {
         width: 'auto',
       },
     },
-    grid: {
+    formGrid: {
       display: 'grid',
       columnGap: `${margin}px`,
       gridTemplateColumns: '1fr 1fr',
@@ -37,6 +37,17 @@ const useStyles = makeStyles(theme => {
         gridTemplateColumns: 'none',
         rowGap: `${margin}px`,
         gridTemplateRows: '1fr 1fr',
+      },
+    },
+    statsGrid: {
+      display: 'grid',
+      columnGap: `${margin}px`,
+      gridTemplateColumns: '1fr 1fr 1fr',
+      [theme.breakpoints.down('sm')]: {
+        columnGap: 0,
+        gridTemplateColumns: 'none',
+        rowGap: `${margin}px`,
+        gridTemplateRows: '1fr 1fr 1fr',
       },
     },
   };
@@ -55,13 +66,14 @@ export default function App() {
         </Box>
       ) : (
         <>
-          <Box mb={MARGIN} className={clsx(classes.grid)}>
+          <Box mb={MARGIN} className={clsx(classes.formGrid)}>
             <Borrow />
             <Short />
           </Box>
-          <Box mb={MARGIN} className={clsx(classes.grid)}>
+          <Box mb={MARGIN} className={clsx(classes.statsGrid)}>
             <PendingWithdrawals />
             <Owings />
+            <Rewards />
           </Box>
           <Box mb={MARGIN}>
             <Positions />

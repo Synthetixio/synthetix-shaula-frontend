@@ -1,5 +1,6 @@
 import React from 'react';
 import { makeStyles } from '@material-ui/core/styles';
+import clsx from 'clsx';
 import { Paper, Button } from '@material-ui/core';
 import { useWallet } from 'contexts/wallet';
 import Loader from 'components/Loader';
@@ -40,7 +41,6 @@ export const useStyles = makeStyles(theme => ({
     display: 'flex',
     flexGrow: 1,
     alignItems: 'center',
-    justifyContent: 'center',
   },
 }));
 
@@ -57,35 +57,59 @@ export default function() {
   const [isLoading, setIsLoading] = React.useState(false);
   const [owings, setOwings] = React.useState([]);
 
-  const hasOwings = React.useMemo(
-    () => owings.length && !owings.find(owing => !owing.reclaimAmount.isZero()),
-    [owings]
-  );
-
-  const loadOwings = async () => {};
+  const loadOwings = async ({
+    exchangerContract,
+    address,
+    isMounted,
+    setOwings,
+    setIsLoading,
+    multiCollateralTokenCurrencies,
+  }) => {
+    const getOwingsByCurrency = async ([currency, key]) => ({
+      currency,
+      ...(await exchangerContract.settlementOwing(address, key)),
+    });
+    const owings = (
+      await Promise.all(
+        Object.entries(multiCollateralTokenCurrencies).map(getOwingsByCurrency)
+      )
+    ).filter(o => !o.reclaimAmount.isZero());
+    if (isMounted) {
+      setOwings(owings);
+      setIsLoading(false);
+    }
+  };
 
   React.useEffect(() => {
+    if (!(exchangerContract && multiCollateralTokenCurrencies && address)) {
+      return setIsLoading(true);
+    }
+
     let isMounted = true;
-    (async () => {
-      if (!(exchangerContract && multiCollateralTokenCurrencies && address)) {
-        return setIsLoading(true);
-      }
-      const owings = [];
-      for (const currency in multiCollateralTokenCurrencies) {
-        owings.push({
-          currency,
-          ...(await exchangerContract.settlementOwing(
-            address,
-            multiCollateralTokenCurrencies[currency]
-          )),
-        });
-      }
-      if (isMounted) {
-        setOwings(owings);
-        setIsLoading(false);
-      }
-    })();
-    return () => (isMounted = false);
+    const unsubs = [() => (isMounted = false)];
+
+    const load = async () => {
+      loadOwings({
+        exchangerContract,
+        address,
+        isMounted,
+        setOwings,
+        setIsLoading,
+        multiCollateralTokenCurrencies,
+      });
+    };
+
+    // const subscribe = () => {
+    //   const settleEvent = exchangerContract.filters.Settled();
+    //   exchangerContract.on(settleEvent, load);
+    //   unsubs.push(() => exchangerContract.off(settleEvent, load));
+    // };
+
+    load();
+    // subscribe();
+    return () => {
+      unsubs.forEach(unsub => unsub());
+    };
   }, [exchangerContract, multiCollateralTokenCurrencies, address]);
 
   return !signer ? null : (
@@ -94,20 +118,16 @@ export default function() {
         <div className={classes.heading}>Owings</div>
         <div className={classes.p}>
           {isLoading ? (
-            <div className={classes.paddingWrapper}>
+            <div className={clsx(classes.paddingWrapper, 'justify-center')}>
               <Loader />
             </div>
-          ) : hasOwings ? (
+          ) : !owings.length ? (
             <div className={classes.paddingWrapper}>
               You have no owings to settle.
             </div>
           ) : (
             owings.map(owing => (
-              <Owing
-                key={owing.currency}
-                {...owing}
-                {...{ loadOwings, exchangerContract }}
-              />
+              <Owing key={owing.currency} {...owing} {...{ loadOwings }} />
             ))
           )}
         </div>
@@ -116,7 +136,7 @@ export default function() {
   );
 }
 
-function Owing({ exchangerContract, loadOwings, reclaimAmount, currency }) {
+function Owing({ loadOwings, reclaimAmount, currency }) {
   // const classes = useStyles();
   const {
     showTxNotification,
@@ -126,12 +146,13 @@ function Owing({ exchangerContract, loadOwings, reclaimAmount, currency }) {
 
   const {
     address,
+    exchangerContract,
     config: { multiCollateralTokenCurrenciesByAddress },
   } = useWallet();
 
   const [isSettling, setIsSettling] = React.useState(false);
 
-  const settle = async currency => {
+  const settle = async () => {
     try {
       setIsSettling(true);
       const tx = await exchangerContract.settle(address, currency);

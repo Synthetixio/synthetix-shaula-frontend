@@ -230,7 +230,7 @@ export default function() {
                   <TableCell>Date</TableCell>
                   <TableCell>Type</TableCell>
                   <TableCell>Collateral</TableCell>
-                  <TableCell>Asset</TableCell>
+                  <TableCell>Debt</TableCell>
                   <TableCell align="center">
                     Accrued
                     <br />

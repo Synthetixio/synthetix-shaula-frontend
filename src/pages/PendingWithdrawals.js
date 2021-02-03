@@ -1,6 +1,7 @@
 import React from 'react';
 import * as ethers from 'ethers';
 import { makeStyles } from '@material-ui/core/styles';
+import clsx from 'clsx';
 import { Paper, Button } from '@material-ui/core';
 import { useWallet } from 'contexts/wallet';
 import Loader from 'components/Loader';
@@ -41,7 +42,6 @@ export const useStyles = makeStyles(theme => ({
     display: 'flex',
     flexGrow: 1,
     alignItems: 'center',
-    justifyContent: 'center',
   },
 }));
 
@@ -91,16 +91,33 @@ export default function() {
     }
   };
 
+  const loadPendingWithdrawals = async ({
+    ethCollateralContract,
+    isMounted,
+    setPendingWithdrawals,
+    setIsLoading,
+    address,
+  }) => {
+    const pw = await ethCollateralContract.pendingWithdrawals(address);
+    if (isMounted) {
+      setPendingWithdrawals(pw);
+      setIsLoading(false);
+    }
+  };
+
   React.useEffect(() => {
     let isMounted = true;
     (async () => {
       if (!(ethCollateralContract && address)) return;
       setIsLoading(true);
-      const pw = await ethCollateralContract.pendingWithdrawals(address);
-      if (isMounted) {
-        setPendingWithdrawals(pw);
-        setIsLoading(false);
-      }
+
+      loadPendingWithdrawals({
+        ethCollateralContract,
+        isMounted,
+        setPendingWithdrawals,
+        setIsLoading,
+        address,
+      });
     })();
     return () => (isMounted = false);
   }, [ethCollateralContract, address]);
@@ -111,7 +128,7 @@ export default function() {
         <div className={classes.heading}>Pending Withdrawals</div>
         <div className={classes.p}>
           {isLoading ? (
-            <div className={classes.paddingWrapper}>
+            <div className={clsx(classes.paddingWrapper, 'justify-center')}>
               <Loader />
             </div>
           ) : pendingWithdrawals.isZero() ? (
