@@ -1,7 +1,7 @@
 import React from 'react';
 import MultiCollateral from './MultiCollateral';
 
-const COLLATERAL_ASSETS = ['renBTC', 'ETH'];
+const COLLATERAL_ASSETS = ['ETH', 'renBTC'];
 
 export default function() {
   return (

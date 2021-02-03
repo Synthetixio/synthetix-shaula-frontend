@@ -319,7 +319,9 @@ export default function({ collateralAssets, targetAssetsFilter, short }) {
             </div>
           }
           type="number"
-          step="any"
+          inputProps={{
+            step: 'any',
+          }}
           className={classes.input}
           InputLabelProps={{
             shrink: true,
@@ -339,7 +341,9 @@ export default function({ collateralAssets, targetAssetsFilter, short }) {
             </div>
           }
           type="number"
-          step="any"
+          inputProps={{
+            step: 'any',
+          }}
           className={classes.input}
           InputLabelProps={{
             shrink: true,

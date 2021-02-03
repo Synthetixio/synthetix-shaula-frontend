@@ -1,29 +1,17 @@
 import React from 'react';
-import moment from 'moment';
-import clsx from 'clsx';
 import { makeStyles } from '@material-ui/core/styles';
 import {
   Paper,
-  Button,
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableRow,
-  Tooltip,
 } from '@material-ui/core';
-import { Help as TipIcon } from '@material-ui/icons';
 import { useWallet } from 'contexts/wallet';
 import Loader from 'components/Loader';
-import { formatUnits } from 'utils/big-number';
-import { useNotifications } from 'contexts/notifications';
-import {
-  LOAN_TYPE_ERC20,
-  LOAN_TYPE_ETH,
-  LOAN_TYPE_SHORT,
-  DANGER_COLOR,
-  SUCCESS_COLOR,
-} from 'config';
+import Loan from './LoanListItem';
+import LoanActionsModal from './LoanActions/LoanActionsModal';
 
 export const useStyles = makeStyles(theme => ({
   container: {
@@ -31,10 +19,6 @@ export const useStyles = makeStyles(theme => ({
     padding: '20px 50px',
     borderRadius: 8,
     flex: 1,
-    '& button': {
-      width: 50,
-      fontFamily: 'GT-America-Compressed-Regular',
-    },
     [theme.breakpoints.down('sm')]: {
       margin: 10,
     },
@@ -59,12 +43,6 @@ export const useStyles = makeStyles(theme => ({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  dangerCRatio: {
-    color: DANGER_COLOR,
-  },
-  okCRatio: {
-    color: SUCCESS_COLOR,
-  },
 }));
 
 export default function() {
@@ -82,6 +60,7 @@ export default function() {
 
   const [isLoading, setIsLoading] = React.useState(false);
   const [loans, setLoans] = React.useState([]);
+  const [loanBeingActedOn, setLoanBeingActedOn] = React.useState(null);
 
   React.useEffect(() => {
     let isMounted = true;
@@ -175,7 +154,10 @@ export default function() {
         return () => {};
       for (const type in collateralContracts) {
         const contract = collateralContracts[type];
-        const onCreate = async (owner, id) => {
+
+        // todo: refresh c-ratio
+
+        const onLoanCreated = async (owner, id) => {
           const loan = await makeLoan({
             loan: await collateralStateContracts[type].getLoan(owner, id),
             type,
@@ -183,15 +165,87 @@ export default function() {
           });
           setLoans(loans => [loan, ...loans]);
         };
-        const onClose = (owner, id) => {
+
+        const onLoanClosed = (owner, id) => {
           setLoans(loans => loans.filter(loan => !loan.id.eq(id)));
         };
+
+        const onCollateralDeposited = (owner, id, amount) => {
+          setLoans(loans =>
+            loans.map(loan => {
+              if (loan.id.eq(id)) {
+                loan.collateral = loan.collateral.add(amount);
+              }
+              return loan;
+            })
+          );
+        };
+
+        const onCollateralWithdrawn = (owner, id, amount) => {
+          setLoans(loans =>
+            loans.map(loan => {
+              if (loan.id.eq(id)) {
+                loan.collateral = loan.collateral.sub(amount);
+              }
+              return loan;
+            })
+          );
+        };
+
+        const onLoanRepaymentMade = (borrower, repayer, id, payment) => {
+          setLoans(loans =>
+            loans.map(loan => {
+              if (loan.id.eq(id)) {
+                loan.amount = loan.amount.sub(payment);
+              }
+              return loan;
+            })
+          );
+        };
+
+        const onLoanDrawnDown = (owner, id, amount) => {
+          setLoans(loans =>
+            loans.map(loan => {
+              if (loan.id.eq(id)) {
+                loan.amount = loan.amount.add(amount);
+              }
+              return loan;
+            })
+          );
+        };
+
         const loanCreatedEvent = contract.filters.LoanCreated(address);
         const loanClosedEvent = contract.filters.LoanClosed(address);
-        contract.on(loanCreatedEvent, onCreate);
-        contract.on(loanClosedEvent, onClose);
-        unsubs.push(() => contract.off(loanCreatedEvent, onCreate));
-        unsubs.push(() => contract.off(loanClosedEvent, onClose));
+        const collateralDepositedEvent = contract.filters.CollateralDeposited(
+          address
+        );
+        const collateralWithdrawnEvent = contract.filters.CollateralWithdrawn(
+          address
+        );
+        const loanDrawnDownEvent = contract.filters.LoanDrawnDown(address);
+        const loanRepaymentMadeEvent = contract.filters.LoanRepaymentMade(
+          address
+        );
+
+        contract.on(loanCreatedEvent, onLoanCreated);
+        contract.on(loanClosedEvent, onLoanClosed);
+        contract.on(collateralDepositedEvent, onCollateralDeposited);
+        contract.on(collateralWithdrawnEvent, onCollateralWithdrawn);
+        contract.on(loanDrawnDownEvent, onLoanDrawnDown);
+        contract.on(loanRepaymentMadeEvent, onLoanRepaymentMade);
+
+        unsubs.push(() => contract.off(loanCreatedEvent, onLoanCreated));
+        unsubs.push(() => contract.off(loanClosedEvent, onLoanClosed));
+        unsubs.push(() =>
+          contract.off(collateralDepositedEvent, onCollateralDeposited)
+        );
+        unsubs.push(() =>
+          contract.off(collateralWithdrawnEvent, onCollateralWithdrawn)
+        );
+        unsubs.push(() => contract.off(loanDrawnDownEvent, onLoanDrawnDown));
+        unsubs.push(() =>
+          contract.off(loanRepaymentMadeEvent, onLoanRepaymentMade)
+        );
       }
     };
 
@@ -210,6 +264,9 @@ export default function() {
     collateralStateContracts,
   ]);
 
+  const startActOnLoan = args => setLoanBeingActedOn(args);
+  const closeLoansActionModal = () => setLoanBeingActedOn(null);
+
   return !signer ? null : (
     <Paper className={classes.container}>
       <div className={classes.content}>
@@ -223,7 +280,7 @@ export default function() {
           ) : !loans.length ? (
             <div className={classes.paddingWrapper}>You have no loans.</div>
           ) : (
-            <Table className={classes.table} aria-label="Loans">
+            <Table aria-label="Loans">
               <TableHead>
                 <TableRow>
                   <TableCell>ID</TableCell>
@@ -242,117 +299,19 @@ export default function() {
               </TableHead>
               <TableBody>
                 {loans.map(loan => (
-                  <Loan key={loan.id.toString()} {...{ loan }} />
+                  <Loan
+                    key={loan.id.toString()}
+                    {...{ loan }}
+                    onActOnLoan={startActOnLoan}
+                  />
                 ))}
               </TableBody>
             </Table>
           )}
         </div>
       </div>
+
+      <LoanActionsModal {...loanBeingActedOn} onClose={closeLoansActionModal} />
     </Paper>
-  );
-}
-
-function Loan({ loan }) {
-  const classes = useStyles();
-
-  const [isClosing, setIsClosing] = React.useState(false);
-  const {
-    collateralContracts,
-    config: { multiCollateralTokenCurrenciesByAddress },
-  } = useWallet();
-  const {
-    showTxNotification,
-    showErrorNotification,
-    showSuccessNotification,
-  } = useNotifications();
-
-  const targetName = React.useMemo(
-    () => multiCollateralTokenCurrenciesByAddress[loan.currency],
-    [multiCollateralTokenCurrenciesByAddress, loan]
-  );
-  const collateralName = React.useMemo(
-    () =>
-      ({
-        [LOAN_TYPE_ERC20]: 'renBTC',
-        [LOAN_TYPE_ETH]: 'ETH',
-        [LOAN_TYPE_SHORT]: 'sUSD',
-      }[loan.type]),
-    [loan]
-  );
-
-  const close = async () => {
-    try {
-      setIsClosing(true);
-      const tx = await collateralContracts[loan.type].close(loan.id);
-      showTxNotification(`Closing loan(#${loan.id.toString()})`, tx.hash);
-      await tx.wait();
-      showSuccessNotification(
-        `Loan(#${loan.id.toString()}) successfully closed.`,
-        tx.hash
-      );
-    } catch (e) {
-      showErrorNotification(e);
-    } finally {
-      setIsClosing(false);
-    }
-  };
-
-  return (
-    <TableRow>
-      <TableCell component="th" scope="row">
-        {loan.id.toString()}
-      </TableCell>
-      <TableCell>
-        {moment
-          .unix(loan.lastInteraction.toNumber())
-          .local()
-          .format('YYYY-MM-DD HH:mm')}
-      </TableCell>
-      <TableCell>{loan.short ? 'Short' : 'Borrow'}</TableCell>
-      <TableCell>
-        {formatUnits(loan.collateral, 18)} {collateralName}
-      </TableCell>
-      <TableCell>
-        {formatUnits(loan.amount, 18)} {targetName}
-      </TableCell>
-      <TableCell align="center">
-        {formatUnits(loan.accruedInterest, 18)}
-      </TableCell>
-      <TableCell
-        align="center"
-        className={clsx(
-          loan.cratio.lt(loan.minCRatio)
-            ? classes.dangerCRatio
-            : classes.okCRatio
-        )}
-      >
-        <div className="flex items-center">
-          {formatUnits(loan.cratio, 16, 0)}&nbsp;
-          <Tooltip
-            title={
-              <div className="text-center">
-                Position will be at risk of liquidation
-                <br />
-                if cratio falls below the minimum of{' '}
-                {formatUnits(loan.minCRatio, 16, 0)}.
-              </div>
-            }
-          >
-            <TipIcon style={{ fontSize: 15 }} className={classes.boxTip} />
-          </Tooltip>
-        </div>
-      </TableCell>
-      <TableCell align="right">
-        <Button
-          color="secondary"
-          variant="outlined"
-          onClick={close}
-          disabled={isClosing}
-        >
-          {isClosing ? 'CLOSING...' : 'CLOSE'}
-        </Button>{' '}
-      </TableCell>
-    </TableRow>
   );
 }

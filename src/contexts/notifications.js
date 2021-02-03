@@ -37,12 +37,25 @@ export function NotificationsProvider({ children }) {
       }
     );
 
+  const tx = async (startNotification, endNotification, makeTx) => {
+    try {
+      const { hash, wait } = await makeTx();
+      showTxNotification(startNotification, hash);
+      await wait();
+      showSuccessNotification(endNotification, hash);
+    } catch (e) {
+      showErrorNotification(e);
+      throw e;
+    }
+  };
+
   return (
     <NotificationsContext.Provider
       value={{
         showTxNotification,
         showErrorNotification,
         showSuccessNotification,
+        tx,
       }}
     >
       {children}
@@ -59,10 +72,12 @@ export function useNotifications() {
     showTxNotification,
     showErrorNotification,
     showSuccessNotification,
+    tx,
   } = context;
   return {
     showTxNotification,
     showErrorNotification,
     showSuccessNotification,
+    tx,
   };
 }

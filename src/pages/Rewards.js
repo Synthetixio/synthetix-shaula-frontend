@@ -16,8 +16,6 @@ export const useStyles = makeStyles(theme => ({
     borderRadius: 8,
     flex: 1,
     '& button': {
-      width: 100,
-      fontFamily: 'GT-America-Compressed-Regular',
       marginLeft: 10,
     },
     [theme.breakpoints.down('sm')]: {
@@ -214,6 +212,7 @@ function Reward({ currency, loadRewards, claimAmount }) {
       <Button
         color="secondary"
         variant="outlined"
+        size="small"
         onClick={claim}
         disabled={isClaiming}
       >
