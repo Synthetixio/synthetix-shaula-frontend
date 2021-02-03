@@ -17,7 +17,7 @@ export default function({ loan, collateralName, closeModal }) {
   const classes = useStyles();
   const [isWorking, setIsWorking] = React.useState(false);
   const {
-    collateralContracts,
+    loanContracts,
     address,
     config: { tokens },
     signer,
@@ -49,21 +49,21 @@ export default function({ loan, collateralName, closeModal }) {
     [collateralIsETH, collateralAddress, signer]
   );
 
-  const multiCollateralContract = collateralContracts[loan.type];
-  const multiCollateralAddress = multiCollateralContract.address;
+  const loanContract = loanContracts[loan.type];
+  const loanContractAddress = loanContract.address;
 
   React.useEffect(() => {
     let isMounted = true;
     (async () => {
       if (
         collateralIsETH ||
-        !(collateralContract && multiCollateralAddress && address)
+        !(collateralContract && loanContractAddress && address)
       ) {
         return setIsApproved(true);
       }
       const allowance = await collateralContract.allowance(
         address,
-        multiCollateralAddress
+        loanContractAddress
       );
       if (isMounted) setIsApproved(allowance.gte(collateralAmount));
     })();
@@ -72,7 +72,7 @@ export default function({ loan, collateralName, closeModal }) {
     collateralIsETH,
     collateralContract,
     address,
-    multiCollateralAddress,
+    loanContractAddress,
     collateralAmount,
   ]);
 
@@ -87,15 +87,14 @@ export default function({ loan, collateralName, closeModal }) {
       await tx(
         `Approving ${collateralName}`,
         `Approved ${collateralName}`,
-        () =>
-          collateralContract.approve(multiCollateralAddress, collateralAmount)
+        () => collateralContract.approve(loanContractAddress, collateralAmount)
       );
 
-      if (collateralIsETH || !(signer && multiCollateralAddress && address))
+      if (collateralIsETH || !(signer && loanContractAddress && address))
         return setIsApproved(true);
       const allowance = await collateralContract.allowance(
         address,
-        multiCollateralAddress
+        loanContractAddress
       );
       setIsApproved(allowance.gte(collateralAmount));
     } finally {
@@ -110,7 +109,7 @@ export default function({ loan, collateralName, closeModal }) {
         `Adding collateral to loan(#${loan.id.toString()})`,
         `Added collateral to loan(#${loan.id.toString()}).`,
         () =>
-          multiCollateralContract.deposit(
+          loanContract.deposit(
             address,
             loan.id,
             collateralIsETH ? { value: collateralAmount } : collateralAmount

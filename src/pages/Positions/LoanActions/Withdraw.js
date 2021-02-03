@@ -16,7 +16,7 @@ export default function({ loan, collateralName, closeModal }) {
   const classes = useStyles();
   const [isWorking, setIsWorking] = React.useState(false);
   const {
-    collateralContracts,
+    loanContracts,
     config: { tokens },
   } = useWallet();
   const { tx } = useNotifications();
@@ -35,7 +35,7 @@ export default function({ loan, collateralName, closeModal }) {
       await tx(
         `Withdrawing collateral to loan(#${loan.id.toString()})`,
         `Withdrew collateral to loan(#${loan.id.toString()}).`,
-        () => collateralContracts[loan.type].withdraw(loan.id, amount)
+        () => loanContracts[loan.type].withdraw(loan.id, amount)
       );
       closeModal();
     } catch {

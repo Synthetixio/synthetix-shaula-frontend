@@ -51,11 +51,11 @@ export default function() {
   const {
     signer,
     address,
-    erc20CollateralStateContract,
-    ethCollateralStateContract,
-    shortCollateralStateContract,
-    collateralContracts,
-    collateralStateContracts,
+    erc20LoanStateContract,
+    ethLoanStateContract,
+    shortLoanStateContract,
+    loanContracts,
+    loanStateContracts,
   } = useWallet();
 
   const [isLoading, setIsLoading] = React.useState(false);
@@ -68,8 +68,8 @@ export default function() {
 
     const getLoanIndices = async type => {
       const [n, minCRatio] = await Promise.all([
-        collateralStateContracts[type].getNumLoans(address),
-        collateralContracts[type].minCratio(),
+        loanStateContracts[type].getNumLoans(address),
+        loanContracts[type].minCratio(),
       ]);
       const loanIndices = [];
       for (let i = 0; i < n; i++) {
@@ -86,7 +86,7 @@ export default function() {
       return {
         type,
         minCRatio,
-        loan: await collateralStateContracts[type].loans(address, loanIndex),
+        loan: await loanStateContracts[type].loans(address, loanIndex),
       };
     };
 
@@ -95,16 +95,16 @@ export default function() {
         ...loan,
         type,
         minCRatio,
-        cratio: await collateralContracts[type].collateralRatio(loan),
+        cratio: await loanContracts[type].collateralRatio(loan),
       };
     };
 
     const loadLoans = async () => {
       if (
         !(
-          erc20CollateralStateContract &&
-          ethCollateralStateContract &&
-          shortCollateralStateContract &&
+          erc20LoanStateContract &&
+          ethLoanStateContract &&
+          shortLoanStateContract &&
           address
         )
       )
@@ -112,7 +112,7 @@ export default function() {
       setIsLoading(true);
 
       const loanIndices = await Promise.all(
-        Object.keys(collateralStateContracts).map(getLoanIndices)
+        Object.keys(loanStateContracts).map(getLoanIndices)
       );
       const loans = await Promise.all(loanIndices.map(getLoans));
       const activeLoans = [];
@@ -145,23 +145,23 @@ export default function() {
     const subscribe = () => {
       if (
         !(
-          erc20CollateralStateContract &&
-          ethCollateralStateContract &&
-          shortCollateralStateContract &&
+          erc20LoanStateContract &&
+          ethLoanStateContract &&
+          shortLoanStateContract &&
           address
         )
       )
         return () => {};
-      for (const type in collateralContracts) {
-        const contract = collateralContracts[type];
+      for (const type in loanContracts) {
+        const contract = loanContracts[type];
 
         // todo: refresh c-ratio
 
         const onLoanCreated = async (owner, id) => {
           const loan = await makeLoan({
-            loan: await collateralStateContracts[type].getLoan(owner, id),
+            loan: await loanStateContracts[type].getLoan(owner, id),
             type,
-            minCRatio: await collateralContracts[type].minCratio(),
+            minCRatio: await loanContracts[type].minCratio(),
           });
           setLoans(loans => [loan, ...loans]);
         };
@@ -256,12 +256,12 @@ export default function() {
       unsubs.forEach(unsub => unsub());
     };
   }, [
-    erc20CollateralStateContract,
-    ethCollateralStateContract,
-    shortCollateralStateContract,
+    erc20LoanStateContract,
+    ethLoanStateContract,
+    shortLoanStateContract,
     address,
-    collateralContracts,
-    collateralStateContracts,
+    loanContracts,
+    loanStateContracts,
   ]);
 
   const startActOnLoan = args => setLoanBeingActedOn(args);

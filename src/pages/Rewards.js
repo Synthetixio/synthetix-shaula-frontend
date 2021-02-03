@@ -15,9 +15,6 @@ export const useStyles = makeStyles(theme => ({
     padding: '20px 50px',
     borderRadius: 8,
     flex: 1,
-    '& button': {
-      marginLeft: 10,
-    },
     [theme.breakpoints.down('sm')]: {
       margin: 10,
     },
@@ -50,8 +47,8 @@ export default function() {
     signer,
     address,
     version,
-    config: { multiCollateralTokenCurrencies },
-    shortCollateralContract,
+    config: { tokenCurrencies },
+    shortLoanContract,
   } = useWallet();
 
   const [isLoading, setIsLoading] = React.useState(false);
@@ -67,15 +64,13 @@ export default function() {
         }
         return;
       }
-      if (
-        !(signer && shortCollateralContract && multiCollateralTokenCurrencies)
-      ) {
+      if (!(signer && shortLoanContract && tokenCurrencies)) {
         return setIsLoading(true);
       }
 
       const getRewardContract = async currency => {
-        const currencyAddress = multiCollateralTokenCurrencies[currency];
-        const rewardAddress = await shortCollateralContract.shortingRewards(
+        const currencyAddress = tokenCurrencies[currency];
+        const rewardAddress = await shortLoanContract.shortingRewards(
           currencyAddress
         );
         return {
@@ -97,12 +92,7 @@ export default function() {
       }
     })();
     return () => (isMounted = false);
-  }, [
-    shortCollateralContract,
-    multiCollateralTokenCurrencies,
-    signer,
-    version,
-  ]);
+  }, [shortLoanContract, tokenCurrencies, signer, version]);
 
   React.useEffect(() => {
     if (version === 1) {
@@ -173,16 +163,12 @@ export default function() {
 
 function Reward({ currency, loadRewards, claimAmount }) {
   // const classes = useStyles();
-  const {
-    showTxNotification,
-    showErrorNotification,
-    showSuccessNotification,
-  } = useNotifications();
+  const { tx, showErrorNotification } = useNotifications();
 
   const {
     address,
-    shortCollateralContract,
-    config: { multiCollateralTokenCurrencies },
+    shortLoanContract,
+    config: { tokenCurrencies },
   } = useWallet();
 
   const [isClaiming, setIsClaiming] = React.useState(false);
@@ -190,14 +176,10 @@ function Reward({ currency, loadRewards, claimAmount }) {
   const claim = async () => {
     try {
       setIsClaiming(true);
-      const tx = await shortCollateralContract.getReward(
-        multiCollateralTokenCurrencies[currency],
-        address
-      );
-      showTxNotification(`Claiming ${currency} reward.`, tx.hash);
-      await tx.wait();
-      showSuccessNotification(
-        `You have successfully claimed your ${currency} short rewards.`
+      await tx(
+        `Claiming ${currency} reward.`,
+        `You have successfully claimed your ${currency} short rewards.`,
+        () => shortLoanContract.getReward(tokenCurrencies[currency], address)
       );
     } catch (e) {
       showErrorNotification(e);

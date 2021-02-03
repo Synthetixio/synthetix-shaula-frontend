@@ -15,9 +15,6 @@ export const useStyles = makeStyles(theme => ({
     padding: '20px 50px',
     borderRadius: 8,
     flex: 1,
-    '& button': {
-      marginLeft: 10,
-    },
     [theme.breakpoints.down('sm')]: {
       margin: 10,
     },
@@ -45,13 +42,9 @@ export const useStyles = makeStyles(theme => ({
 
 export default function() {
   const classes = useStyles();
-  const {
-    showTxNotification,
-    showErrorNotification,
-    showSuccessNotification,
-  } = useNotifications();
+  const { tx, showErrorNotification } = useNotifications();
 
-  const { signer, address, ethCollateralContract } = useWallet();
+  const { signer, address, ethLoanContract } = useWallet();
 
   const [isLoading, setIsLoading] = React.useState(false);
   const [isClaiming, setIsClaiming] = React.useState(false);
@@ -62,26 +55,25 @@ export default function() {
   const claim = async () => {
     try {
       setIsClaiming(true);
-      const tx = await ethCollateralContract.claim(
-        await ethCollateralContract.pendingWithdrawals(address)
-      );
-      showTxNotification(
+      const pw = await ethLoanContract.pendingWithdrawals(address);
+      await tx(
         `Withdrawing ${formatUnits(pendingWithdrawals, 18)} ETH`,
-        tx.hash
-      );
-      await tx.wait();
-      showSuccessNotification(
         `You have successfully withdrawn ${formatUnits(
           pendingWithdrawals,
           18
-        )} ETH.`
+        )} ETH.`,
+        () => ethLoanContract.claim(pw)
       );
       await sleep(1000);
 
       setIsLoading(true);
-      const pw = await ethCollateralContract.pendingWithdrawals(address);
-      setPendingWithdrawals(pw);
-      setIsLoading(false);
+      await loadPendingWithdrawals({
+        ethLoanContract,
+        isMounted: true,
+        setPendingWithdrawals,
+        setIsLoading,
+        address,
+      });
     } catch (e) {
       showErrorNotification(e);
     } finally {
@@ -90,13 +82,13 @@ export default function() {
   };
 
   const loadPendingWithdrawals = async ({
-    ethCollateralContract,
+    ethLoanContract,
     isMounted,
     setPendingWithdrawals,
     setIsLoading,
     address,
   }) => {
-    const pw = await ethCollateralContract.pendingWithdrawals(address);
+    const pw = await ethLoanContract.pendingWithdrawals(address);
     if (isMounted) {
       setPendingWithdrawals(pw);
       setIsLoading(false);
@@ -106,11 +98,11 @@ export default function() {
   React.useEffect(() => {
     let isMounted = true;
     (async () => {
-      if (!(ethCollateralContract && address)) return;
+      if (!(ethLoanContract && address)) return;
       setIsLoading(true);
 
       loadPendingWithdrawals({
-        ethCollateralContract,
+        ethLoanContract,
         isMounted,
         setPendingWithdrawals,
         setIsLoading,
@@ -118,7 +110,7 @@ export default function() {
       });
     })();
     return () => (isMounted = false);
-  }, [ethCollateralContract, address]);
+  }, [ethLoanContract, address]);
 
   return !signer ? null : (
     <Paper className={classes.container}>

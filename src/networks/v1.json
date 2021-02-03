@@ -22,17 +22,17 @@
         "0xee"
       ]
     },
-    "multiCollateralTokenCurrencies": {
+    "tokenCurrencies": {
       "sBTC": "0x7342544300000000000000000000000000000000000000000000000000000000",
       "sETH": "0x7345544800000000000000000000000000000000000000000000000000000000",
       "sUSD": "0x7355534400000000000000000000000000000000000000000000000000000000"
     },
-    "multiCollateralERC20Address": "0x3B3812BB9f6151bEb6fa10783F1ae848a77a0d46",
-    "multiCollateralETHAddress": "0x3FF5c0A14121Ca39211C95f6cEB221b86A90729E",
-    "multiCollateralShortAddress": "0x188C2274B04Ea392B21487b5De299e382Ff84246",
-    "erc20CollateralStateAddress": "0x54277B3a7A4aEe0fdF279E16aBF9D5Dad87828D6",
-    "ethCollateralStateAddress": "0x04D9231B1fff88464a3d26Fd91A1bA0b24796107",
-    "shortCollateralStateAddress": "0xd322259B4D93F81a2a59f6010BEC166F6f5E870c",
+    "erc20LoanContractAddress": "0x3B3812BB9f6151bEb6fa10783F1ae848a77a0d46",
+    "ethLoanContractAddress": "0x3FF5c0A14121Ca39211C95f6cEB221b86A90729E",
+    "shortLoanContractAddress": "0x188C2274B04Ea392B21487b5De299e382Ff84246",
+    "erc20LoanStateContractAddress": "0x54277B3a7A4aEe0fdF279E16aBF9D5Dad87828D6",
+    "ethLoanStateContractAddress": "0x04D9231B1fff88464a3d26Fd91A1bA0b24796107",
+    "shortLoanStateContractAddress": "0xd322259B4D93F81a2a59f6010BEC166F6f5E870c",
     "exchangerAddress": "0x0bfDc04B38251394542586969E2356d0D731f7DE"
   },
   "kovan": {
@@ -58,17 +58,17 @@
         "0xee"
       ]
     },
-    "multiCollateralTokenCurrencies": {
+    "tokenCurrencies": {
       "sBTC": "0x7342544300000000000000000000000000000000000000000000000000000000",
       "sETH": "0x7345544800000000000000000000000000000000000000000000000000000000",
       "sUSD": "0x7355534400000000000000000000000000000000000000000000000000000000"
     },
-    "multiCollateralERC20Address": "0x42e1B593178BC75e452e5C88A706C9d4cDeBeAF8",
-    "multiCollateralETHAddress": "0xbBe35b80B6F82F17Def6Ed6F76AC9DDf5029EC73",
-    "multiCollateralShortAddress": "0x0AC93512426e7D3C346E5a59B87504644f0780d0",
-    "erc20CollateralStateAddress": "0x8e6669A625c92279E137f887c0175de8C47a3622",
-    "ethCollateralStateAddress": "0xb0243A27b8c08B78B4d7Ae0730670Cf824345114",
-    "shortCollateralStateAddress": "0x153d4BE15626736B9208958d5796EED017aB766c",
+    "erc20LoanContractAddress": "0x42e1B593178BC75e452e5C88A706C9d4cDeBeAF8",
+    "ethLoanContractAddress": "0xbBe35b80B6F82F17Def6Ed6F76AC9DDf5029EC73",
+    "shortLoanContractAddress": "0x0AC93512426e7D3C346E5a59B87504644f0780d0",
+    "erc20LoanStateContractAddress": "0x8e6669A625c92279E137f887c0175de8C47a3622",
+    "ethLoanStateContractAddress": "0xb0243A27b8c08B78B4d7Ae0730670Cf824345114",
+    "shortLoanStateContractAddress": "0x153d4BE15626736B9208958d5796EED017aB766c",
     "exchangerAddress": "0xF49528689234d46724383669BD8658bfB47f8575"
   },
   "rinkeby": {
@@ -94,17 +94,17 @@
         "0xee"
       ]
     },
-    "multiCollateralTokenCurrencies": {
+    "tokenCurrencies": {
       "sBTC": "0x7342544300000000000000000000000000000000000000000000000000000000",
       "sETH": "0x7345544800000000000000000000000000000000000000000000000000000000",
       "sUSD": "0x7355534400000000000000000000000000000000000000000000000000000000"
     },
-    "multiCollateralERC20Address": "0x3c88F556807ec4779BB24fE8FAB81Df4ABBdfed8",
-    "multiCollateralETHAddress": "0x812b08B097faAA3D72034Ab639EEba063aebA1ab",
-    "multiCollateralShortAddress": "0x852a385B32C2F226476500Cc303EB014448B66FB",
-    "erc20CollateralStateAddress": "0xe2fd57caF070A3F995D597a8B21cbF206E34Ff38",
-    "ethCollateralStateAddress": "0x8f28322A3e85296D00dc3c378519AaB7f570bA79",
-    "shortCollateralStateAddress": "0xFAdbaf925eC35D97ae3EB87b458d005Dfd4C4b52",
+    "erc20LoanContractAddress": "0x3c88F556807ec4779BB24fE8FAB81Df4ABBdfed8",
+    "ethLoanContractAddress": "0x812b08B097faAA3D72034Ab639EEba063aebA1ab",
+    "shortLoanContractAddress": "0x852a385B32C2F226476500Cc303EB014448B66FB",
+    "erc20LoanStateContractAddress": "0xe2fd57caF070A3F995D597a8B21cbF206E34Ff38",
+    "ethLoanStateContractAddress": "0x8f28322A3e85296D00dc3c378519AaB7f570bA79",
+    "shortLoanStateContractAddress": "0xFAdbaf925eC35D97ae3EB87b458d005Dfd4C4b52",
     "exchangerAddress": "0x0260F7587a73815E3747Ce3D31FAF1383E1B653a"
   }
 }

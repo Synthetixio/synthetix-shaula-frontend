@@ -16,7 +16,7 @@ export default function({ loan, debtName, closeModal }) {
   const classes = useStyles();
   const [isWorking, setIsWorking] = React.useState(false);
   const {
-    collateralContracts,
+    loanContracts,
     config: { tokens },
   } = useWallet();
   const { tx } = useNotifications();
@@ -31,7 +31,7 @@ export default function({ loan, debtName, closeModal }) {
       await tx(
         `Increasing debt for loan(#${loan.id.toString()})`,
         `Increased debt for loan(#${loan.id.toString()}).`,
-        () => collateralContracts[loan.type].draw(loan.id, amount)
+        () => loanContracts[loan.type].draw(loan.id, amount)
       );
       closeModal();
     } catch {

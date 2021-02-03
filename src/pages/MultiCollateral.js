@@ -54,15 +54,11 @@ export const useStyles = makeStyles(theme => ({
   },
 }));
 
-export default function({ collateralAssets, targetAssetsFilter, short }) {
+export default function({ collateralAssets, debtAssetsFilter, short }) {
   const classes = useStyles();
   const label = short ? 'Short' : 'Borrow';
 
-  const {
-    showTxNotification,
-    showErrorNotification,
-    showSuccessNotification,
-  } = useNotifications();
+  const { tx, showErrorNotification } = useNotifications();
 
   const {
     signer,
@@ -70,43 +66,40 @@ export default function({ collateralAssets, targetAssetsFilter, short }) {
     connect,
     config: {
       tokens,
-      multiCollateralTokenCurrencies,
-      multiCollateralERC20Address,
-      multiCollateralETHAddress,
-      multiCollateralShortAddress,
+      tokenCurrencies,
+      erc20LoanContractAddress,
+      ethLoanContractAddress,
+      shortLoanContractAddress,
     },
 
-    erc20CollateralContract,
-    ethCollateralContract,
-    shortCollateralContract,
+    erc20LoanContract,
+    ethLoanContract,
+    shortLoanContract,
   } = useWallet();
 
   const [isApproving, setIsApproving] = React.useState(false);
   const [isApproved, setIsApproved] = React.useState(false);
   const [isTrading, setIsTrading] = React.useState(false);
 
-  const [targetName, setTargetAsset] = React.useState(
-    targetAssetsFilter(collateralAssets[0])[0]
+  const [debtName, setDebtAsset] = React.useState(
+    debtAssetsFilter(collateralAssets[0])[0]
   );
-  const [targetAssets, setTargetAssets] = React.useState(
-    targetAssetsFilter(collateralAssets[0])
+  const [debtAssets, setDebtAssets] = React.useState(
+    debtAssetsFilter(collateralAssets[0])
   );
-  const [targetDecimals, targetAddress] = React.useMemo(
-    () => (tokens && targetName && tokens[targetName]) ?? [],
-    [tokens, targetName]
+  const [debtDecimals, debtAddress] = React.useMemo(
+    () => (tokens && debtName && tokens[debtName]) ?? [],
+    [tokens, debtName]
   );
 
-  const [targetAmountNumber, setTargetAmountNumber] = React.useState(0);
-  const targetAmount = React.useMemo(() => {
+  const [debtAmountNumber, setDebtAmountNumber] = React.useState(0);
+  const debtAmount = React.useMemo(() => {
     try {
-      return ethers.utils.parseUnits(
-        targetAmountNumber.toString(),
-        targetDecimals
-      );
+      return ethers.utils.parseUnits(debtAmountNumber.toString(), debtDecimals);
     } catch {
       return ethers.BigNumber.from('0');
     }
-  }, [targetAmountNumber, targetDecimals]);
+  }, [debtAmountNumber, debtDecimals]);
 
   const [collateralName, setCollateralAsset] = React.useState(
     collateralAssets[0]
@@ -128,11 +121,11 @@ export default function({ collateralAssets, targetAssetsFilter, short }) {
     }
   }, [collateralAmountNumber, collateralDecimals]);
 
-  const multiCollateralAddress = short
-    ? multiCollateralShortAddress
+  const loanContractAddress = short
+    ? shortLoanContractAddress
     : collateralIsETH
-    ? multiCollateralETHAddress
-    : multiCollateralERC20Address;
+    ? ethLoanContractAddress
+    : erc20LoanContractAddress;
 
   const collateralContract = React.useMemo(
     () =>
@@ -143,20 +136,20 @@ export default function({ collateralAssets, targetAssetsFilter, short }) {
     [collateralIsETH, collateralAddress, signer]
   );
 
-  const multiCollateralContract = React.useMemo(
+  const loanContract = React.useMemo(
     () =>
       signer && short
-        ? shortCollateralContract
+        ? shortLoanContract
         : collateralIsETH
-        ? ethCollateralContract
-        : erc20CollateralContract,
+        ? ethLoanContract
+        : erc20LoanContract,
     [
       signer,
       short,
       collateralIsETH,
-      erc20CollateralContract,
-      ethCollateralContract,
-      shortCollateralContract,
+      erc20LoanContract,
+      ethLoanContract,
+      shortLoanContract,
     ]
   );
 
@@ -164,7 +157,7 @@ export default function({ collateralAssets, targetAssetsFilter, short }) {
     if (!signer) {
       return connect();
     }
-    let minCollateral = await multiCollateralContract.minCollateral();
+    let minCollateral = await loanContract.minCollateral();
     if (!short) {
       // workaround for issue where minCollateral should be of decimals of 8, for renBTC
       minCollateral = minCollateral.div(
@@ -185,23 +178,20 @@ export default function({ collateralAssets, targetAssetsFilter, short }) {
   const approve = async () => {
     try {
       setIsApproving(true);
-      const tx = await collateralContract.approve(
-        multiCollateralAddress,
-        collateralAmount
-      );
-      showTxNotification(`Approving ${collateralName}`, tx.hash);
-      await tx.wait();
-      showSuccessNotification(`Approved ${collateralName}`, tx.hash);
 
-      if (collateralIsETH || !(signer && multiCollateralAddress && address))
+      await tx(
+        `Approving ${collateralName}`,
+        `Approved ${collateralName}`,
+        () => collateralContract.approve(loanContractAddress, collateralAmount)
+      );
+
+      if (collateralIsETH || !(signer && loanContractAddress && address))
         return setIsApproved(true);
       const allowance = await collateralContract.allowance(
         address,
-        multiCollateralAddress
+        loanContractAddress
       );
       setIsApproved(allowance.gte(collateralAmount));
-    } catch (e) {
-      showErrorNotification(e);
     } finally {
       setIsApproving(false);
     }
@@ -209,35 +199,25 @@ export default function({ collateralAssets, targetAssetsFilter, short }) {
 
   const trade = async () => {
     try {
-      if (targetAmount.isZero()) {
-        return showErrorNotification(`Enter ${targetName} amount..`);
+      if (debtAmount.isZero()) {
+        return showErrorNotification(`Enter ${debtName} amount..`);
       }
       setIsTrading(true);
-      const tx = await (collateralIsETH
-        ? multiCollateralContract.open(
-            targetAmount,
-            multiCollateralTokenCurrencies[targetName],
-            { value: collateralAmount }
-          )
-        : multiCollateralContract.open(
-            collateralAmount,
-            targetAmount,
-            multiCollateralTokenCurrencies[targetName]
-          ));
-      showTxNotification(
-        `${label}ing ${formatUnits(
-          targetAmount,
-          targetDecimals
-        )} ${targetName}`,
-        tx.hash
+
+      await tx(
+        `${label}ing ${formatUnits(debtAmount, debtDecimals)} ${debtName}`,
+        `${label}ed ${formatUnits(debtAmount, debtDecimals)} ${debtName}`,
+        () =>
+          collateralIsETH
+            ? loanContract.open(debtAmount, tokenCurrencies[debtName], {
+                value: collateralAmount,
+              })
+            : loanContract.open(
+                collateralAmount,
+                debtAmount,
+                tokenCurrencies[debtName]
+              )
       );
-      await tx.wait();
-      showSuccessNotification(
-        `${label}ed ${formatUnits(targetAmount, targetDecimals)} ${targetName}`,
-        tx.hash
-      );
-    } catch (e) {
-      showErrorNotification(e);
     } finally {
       setIsTrading(false);
     }
@@ -248,13 +228,13 @@ export default function({ collateralAssets, targetAssetsFilter, short }) {
     (async () => {
       if (
         collateralIsETH ||
-        !(collateralContract && multiCollateralAddress && address)
+        !(collateralContract && loanContractAddress && address)
       ) {
         return setIsApproved(true);
       }
       const allowance = await collateralContract.allowance(
         address,
-        multiCollateralAddress
+        loanContractAddress
       );
       if (isMounted) setIsApproved(allowance.gte(collateralAmount));
     })();
@@ -263,7 +243,7 @@ export default function({ collateralAssets, targetAssetsFilter, short }) {
     collateralIsETH,
     collateralContract,
     address,
-    multiCollateralAddress,
+    loanContractAddress,
     collateralAmount,
   ]);
 
@@ -275,12 +255,12 @@ export default function({ collateralAssets, targetAssetsFilter, short }) {
         <div className={classes.p}>
           <span className="mr">{label}</span>
           <Select
-            labelId="targetNameLabel"
-            id="targetName"
-            value={targetName}
-            onChange={event => setTargetAsset(event.target.value)}
+            labelId="debtNameLabel"
+            id="debtName"
+            value={debtName}
+            onChange={e => setDebtAsset(e.target.value)}
           >
-            {targetAssets.map(name => (
+            {debtAssets.map(name => (
               <MenuItem value={name} key={name}>
                 {name}
               </MenuItem>
@@ -291,12 +271,12 @@ export default function({ collateralAssets, targetAssetsFilter, short }) {
             labelId="collateralNameLabel"
             id="collateralName"
             value={collateralName}
-            onChange={event => {
-              const collateralName = event.target.value;
+            onChange={e => {
+              const collateralName = e.target.value;
               setCollateralAsset(collateralName);
-              const targetAssets = targetAssetsFilter(collateralName);
-              setTargetAsset(targetAssets[0]);
-              setTargetAssets(targetAssets);
+              const debtAssets = debtAssetsFilter(collateralName);
+              setDebtAsset(debtAssets[0]);
+              setDebtAssets(debtAssets);
             }}
           >
             {collateralAssets.map(name => (
@@ -331,13 +311,13 @@ export default function({ collateralAssets, targetAssetsFilter, short }) {
         />
 
         <TextField
-          id="targetAmount"
+          id="debtAmount"
           label={
             <div className="flex flex-grow justify-space">
               <div>
-                {label} Amount ({targetName})
+                {label} Amount ({debtName})
               </div>
-              <Balance tokenAddress={targetAddress} />
+              <Balance tokenAddress={debtAddress} />
             </div>
           }
           type="number"
@@ -349,7 +329,7 @@ export default function({ collateralAssets, targetAssetsFilter, short }) {
             shrink: true,
           }}
           fullWidth
-          onChange={e => setTargetAmountNumber(e.target.value || 0)}
+          onChange={e => setDebtAmountNumber(e.target.value || 0)}
         />
 
         <Button

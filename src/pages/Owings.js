@@ -48,7 +48,7 @@ export default function() {
   const {
     signer,
     address,
-    config: { multiCollateralTokenCurrencies },
+    config: { tokenCurrencies },
     exchangerContract,
   } = useWallet();
 
@@ -61,7 +61,7 @@ export default function() {
     isMounted,
     setOwings,
     setIsLoading,
-    multiCollateralTokenCurrencies,
+    tokenCurrencies,
   }) => {
     const getOwingsByCurrency = async ([currency, key]) => ({
       currency,
@@ -69,7 +69,7 @@ export default function() {
     });
     const owings = (
       await Promise.all(
-        Object.entries(multiCollateralTokenCurrencies).map(getOwingsByCurrency)
+        Object.entries(tokenCurrencies).map(getOwingsByCurrency)
       )
     ).filter(o => !o.reclaimAmount.isZero());
     if (isMounted) {
@@ -79,7 +79,7 @@ export default function() {
   };
 
   React.useEffect(() => {
-    if (!(exchangerContract && multiCollateralTokenCurrencies && address)) {
+    if (!(exchangerContract && tokenCurrencies && address)) {
       return setIsLoading(true);
     }
 
@@ -93,7 +93,7 @@ export default function() {
         isMounted,
         setOwings,
         setIsLoading,
-        multiCollateralTokenCurrencies,
+        tokenCurrencies,
       });
     };
 
@@ -108,7 +108,7 @@ export default function() {
     return () => {
       unsubs.forEach(unsub => unsub());
     };
-  }, [exchangerContract, multiCollateralTokenCurrencies, address]);
+  }, [exchangerContract, tokenCurrencies, address]);
 
   return !signer ? null : (
     <Paper className={classes.container}>
@@ -136,16 +136,12 @@ export default function() {
 
 function Owing({ loadOwings, reclaimAmount, currency }) {
   // const classes = useStyles();
-  const {
-    showTxNotification,
-    showErrorNotification,
-    showSuccessNotification,
-  } = useNotifications();
+  const { tx, showErrorNotification } = useNotifications();
 
   const {
     address,
     exchangerContract,
-    config: { multiCollateralTokenCurrenciesByAddress },
+    config: { tokenCurrenciesByAddress },
   } = useWallet();
 
   const [isSettling, setIsSettling] = React.useState(false);
@@ -153,11 +149,10 @@ function Owing({ loadOwings, reclaimAmount, currency }) {
   const settle = async () => {
     try {
       setIsSettling(true);
-      const tx = await exchangerContract.settle(address, currency);
-      showTxNotification(`Settling ${currency} owed.`, tx.hash);
-      await tx.wait();
-      showSuccessNotification(
-        `You have successfully settled ${currency} owed.`
+      await tx(
+        `Settling ${currency} owed.`,
+        `You have successfully settled ${currency} owed.`,
+        () => exchangerContract.settle(address, currency)
       );
       await sleep(1000);
       await loadOwings();
@@ -170,8 +165,7 @@ function Owing({ loadOwings, reclaimAmount, currency }) {
 
   return (
     <div>
-      {formatUnits(reclaimAmount, 18)}{' '}
-      {multiCollateralTokenCurrenciesByAddress[currency]}{' '}
+      {formatUnits(reclaimAmount, 18)} {tokenCurrenciesByAddress[currency]}{' '}
       <Button
         color="secondary"
         variant="outlined"

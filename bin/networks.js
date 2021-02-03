@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const ethers = require('ethers');
 const fetch = require('node-fetch');
-const MULTI_COLLATERAL_ERC20_ABI = require('../src/abis/multi-collateral-erc20.json');
+const LOAN_ERC20_ABI = require('../src/abis/loan-erc20.json');
 
 const INFURA_ID = process.env.REACT_APP_INFURA_ID;
 const VERSION = 'v2';
@@ -51,13 +51,13 @@ async function getNetworkConfig(network) {
     sETHAddress,
     sUSDAddress,
 
-    multiCollateralERC20Address,
-    multiCollateralETHAddress,
-    multiCollateralShortAddress,
+    erc20LoanContractAddress,
+    ethLoanContractAddress,
+    shortLoanContractAddress,
 
-    erc20CollateralStateAddress,
-    ethCollateralStateAddress,
-    shortCollateralStateAddress,
+    erc20LoanStateContractAddress,
+    ethLoanStateContractAddress,
+    shortLoanStateContractAddress,
 
     exchangerAddress,
   ] = await Promise.all(
@@ -78,12 +78,12 @@ async function getNetworkConfig(network) {
     ].map(request.bind(null, network))
   );
 
-  const multiCollateralContract = new ethers.Contract(
-    multiCollateralERC20Address,
-    MULTI_COLLATERAL_ERC20_ABI,
+  const loanContract = new ethers.Contract(
+    erc20LoanContractAddress,
+    LOAN_ERC20_ABI,
     infuraProvider
   );
-  const renBTCAddress = await multiCollateralContract.underlyingContract();
+  const renBTCAddress = await loanContract.underlyingContract();
 
   // sBTCCurrency,
   // sETHCurrency,
@@ -105,19 +105,19 @@ async function getNetworkConfig(network) {
       ETH: [18, '0xee'],
     },
 
-    multiCollateralTokenCurrencies: {
+    tokenCurrencies: {
       sBTC: sBTCCurrency,
       sETH: sETHCurrency,
       sUSD: sUSDCurrency,
     },
 
-    multiCollateralERC20Address,
-    multiCollateralETHAddress,
-    multiCollateralShortAddress,
+    erc20LoanContractAddress,
+    ethLoanContractAddress,
+    shortLoanContractAddress,
 
-    erc20CollateralStateAddress,
-    ethCollateralStateAddress,
-    shortCollateralStateAddress,
+    erc20LoanStateContractAddress,
+    ethLoanStateContractAddress,
+    shortLoanStateContractAddress,
 
     exchangerAddress,
   };

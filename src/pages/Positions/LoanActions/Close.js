@@ -11,7 +11,7 @@ export default function({ loan, collateralName, debtName, closeModal }) {
   const classes = useStyles();
   const [isWorking, setIsWorking] = React.useState(false);
   const {
-    collateralContracts,
+    loanContracts,
     address,
     config: { tokens },
     signer,
@@ -31,20 +31,23 @@ export default function({ loan, collateralName, debtName, closeModal }) {
     [debtAddress, signer]
   );
 
-  const multiDebtContract = collateralContracts[loan.type];
-  const multiDebtAddress = multiDebtContract.address;
+  const loanContract = loanContracts[loan.type];
+  const loanContractAddress = loanContract.address;
 
   React.useEffect(() => {
     let isMounted = true;
     (async () => {
-      if (!(debtContract && multiDebtAddress && address)) {
+      if (!(debtContract && loanContractAddress && address)) {
         return setIsApproved(true);
       }
-      const allowance = await debtContract.allowance(address, multiDebtAddress);
+      const allowance = await debtContract.allowance(
+        address,
+        loanContractAddress
+      );
       if (isMounted) setIsApproved(allowance.gte(debtAmount));
     })();
     return () => (isMounted = false);
-  }, [debtContract, address, multiDebtAddress, debtAmount]);
+  }, [debtContract, address, loanContractAddress, debtAmount]);
 
   const onApproveOrClose = async e => {
     e.preventDefault();
@@ -55,11 +58,15 @@ export default function({ loan, collateralName, debtName, closeModal }) {
     try {
       setIsWorking('Approving...');
       await tx(`Approving ${debtName}`, `Approved ${debtName}`, () =>
-        debtContract.approve(multiDebtAddress, debtAmount)
+        debtContract.approve(loanContractAddress, debtAmount)
       );
 
-      if (!(signer && multiDebtAddress && address)) return setIsApproved(true);
-      const allowance = await debtContract.allowance(address, multiDebtAddress);
+      if (!(signer && loanContractAddress && address))
+        return setIsApproved(true);
+      const allowance = await debtContract.allowance(
+        address,
+        loanContractAddress
+      );
       setIsApproved(allowance.gte(debtAmount));
     } finally {
       setIsWorking(false);
@@ -72,7 +79,7 @@ export default function({ loan, collateralName, debtName, closeModal }) {
       await tx(
         `Closing loan(#${loan.id.toString()})`,
         `Loan(#${loan.id.toString()}) successfully closed.`,
-        () => collateralContracts[loan.type].close(loan.id)
+        () => loanContracts[loan.type].close(loan.id)
       );
       closeModal();
     } catch {

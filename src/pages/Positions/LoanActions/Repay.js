@@ -17,7 +17,7 @@ export default function({ loan, debtName, closeModal }) {
   const classes = useStyles();
   const [isWorking, setIsWorking] = React.useState(false);
   const {
-    collateralContracts,
+    loanContracts,
     address,
     config: { tokens },
     signer,
@@ -44,20 +44,23 @@ export default function({ loan, debtName, closeModal }) {
     [debtAddress, signer]
   );
 
-  const multiDebtContract = collateralContracts[loan.type];
-  const multiDebtAddress = multiDebtContract.address;
+  const loanContract = loanContracts[loan.type];
+  const loanContractAddress = loanContract.address;
 
   React.useEffect(() => {
     let isMounted = true;
     (async () => {
-      if (!(debtContract && multiDebtAddress && address)) {
+      if (!(debtContract && loanContractAddress && address)) {
         return setIsApproved(true);
       }
-      const allowance = await debtContract.allowance(address, multiDebtAddress);
+      const allowance = await debtContract.allowance(
+        address,
+        loanContractAddress
+      );
       if (isMounted) setIsApproved(allowance.gte(debtAmount));
     })();
     return () => (isMounted = false);
-  }, [debtContract, address, multiDebtAddress, debtAmount]);
+  }, [debtContract, address, loanContractAddress, debtAmount]);
 
   const onApproveOrRepay = async e => {
     e.preventDefault();
@@ -68,11 +71,15 @@ export default function({ loan, debtName, closeModal }) {
     try {
       setIsWorking('Approving...');
       await tx(`Approving ${debtName}`, `Approved ${debtName}`, () =>
-        debtContract.approve(multiDebtAddress, debtAmount)
+        debtContract.approve(loanContractAddress, debtAmount)
       );
 
-      if (!(signer && multiDebtAddress && address)) return setIsApproved(true);
-      const allowance = await debtContract.allowance(address, multiDebtAddress);
+      if (!(signer && loanContractAddress && address))
+        return setIsApproved(true);
+      const allowance = await debtContract.allowance(
+        address,
+        loanContractAddress
+      );
       setIsApproved(allowance.gte(debtAmount));
     } finally {
       setIsWorking(false);
@@ -85,7 +92,7 @@ export default function({ loan, debtName, closeModal }) {
       await tx(
         `Repaying debt for loan(#${loan.id.toString()})`,
         `Repaying debt for loan(#${loan.id.toString()}).`,
-        () => multiDebtContract.repay(address, loan.id, debtAmount)
+        () => loanContract.repay(address, loan.id, debtAmount)
       );
       closeModal();
     } catch {

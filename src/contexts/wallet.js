@@ -11,10 +11,10 @@ import {
 import cache from 'utils/cache';
 import NETWORKS_V1 from 'networks/v1.json';
 import NETWORKS_V2 from 'networks/v2.json';
-import COLLATERAL_STATE_ABI from 'abis/collateral-state.json';
-import MULTI_COLLATERAL_ERC20_ABI from 'abis/multi-collateral-erc20.json';
-import MULTI_COLLATERAL_ETH_ABI from 'abis/multi-collateral-eth.json';
-import MULTI_COLLATERAL_SHORT_ABI from 'abis/multi-collateral-short.json';
+import LOAN_STATE_ABI from 'abis/loan-state.json';
+import LOAN_ERC20_ABI from 'abis/loan-erc20.json';
+import LOAN_ETH_ABI from 'abis/loan-eth.json';
+import LOAN_SHORT_ABI from 'abis/loan-short.json';
 import EXCHANGER_ABI from 'abis/exchanger.json';
 
 const DEFAULT_NETWORK_ID = 1;
@@ -50,98 +50,87 @@ export function WalletProvider({ children }) {
     const cfg = NETWORKS[version][network];
     if (!cfg) return {};
 
-    const multiCollateralTokenCurrenciesByAddress = Object.entries(
-      cfg.multiCollateralTokenCurrencies
-    ).reduce((r, [k, v]) => {
-      r[v] = k;
-      return r;
-    }, {});
+    const tokenCurrenciesByAddress = Object.entries(cfg.tokenCurrencies).reduce(
+      (r, [k, v]) => {
+        r[v] = k;
+        return r;
+      },
+      {}
+    );
 
-    return { ...cfg, multiCollateralTokenCurrenciesByAddress };
+    return { ...cfg, tokenCurrenciesByAddress };
   }, [network, version]);
 
-  const erc20CollateralStateContract = React.useMemo(
+  const erc20LoanStateContract = React.useMemo(
     () =>
       signer &&
-      cfg.erc20CollateralStateAddress &&
+      cfg.erc20LoanStateContractAddress &&
       new ethers.Contract(
-        cfg.erc20CollateralStateAddress,
-        COLLATERAL_STATE_ABI,
+        cfg.erc20LoanStateContractAddress,
+        LOAN_STATE_ABI,
         signer
       ),
-    [signer, cfg.erc20CollateralStateAddress]
+    [signer, cfg.erc20LoanStateContractAddress]
   );
 
-  const ethCollateralStateContract = React.useMemo(
+  const ethLoanStateContract = React.useMemo(
     () =>
       signer &&
-      cfg.ethCollateralStateAddress &&
+      cfg.ethLoanStateContractAddress &&
       new ethers.Contract(
-        cfg.ethCollateralStateAddress,
-        COLLATERAL_STATE_ABI,
+        cfg.ethLoanStateContractAddress,
+        LOAN_STATE_ABI,
         signer
       ),
-    [signer, cfg.ethCollateralStateAddress]
+    [signer, cfg.ethLoanStateContractAddress]
   );
 
-  const shortCollateralStateContract = React.useMemo(
+  const shortLoanStateContract = React.useMemo(
     () =>
       signer &&
-      cfg.shortCollateralStateAddress &&
+      cfg.shortLoanStateContractAddress &&
       new ethers.Contract(
-        cfg.shortCollateralStateAddress,
-        COLLATERAL_STATE_ABI,
+        cfg.shortLoanStateContractAddress,
+        LOAN_STATE_ABI,
         signer
       ),
-    [signer, cfg.shortCollateralStateAddress]
+    [signer, cfg.shortLoanStateContractAddress]
   );
 
-  const erc20CollateralContract = React.useMemo(
+  const erc20LoanContract = React.useMemo(
     () =>
       signer &&
-      cfg.multiCollateralERC20Address &&
-      new ethers.Contract(
-        cfg.multiCollateralERC20Address,
-        MULTI_COLLATERAL_ERC20_ABI,
-        signer
-      ),
-    [signer, cfg.multiCollateralERC20Address]
+      cfg.erc20LoanContractAddress &&
+      new ethers.Contract(cfg.erc20LoanContractAddress, LOAN_ERC20_ABI, signer),
+    [signer, cfg.erc20LoanContractAddress]
   );
 
-  const ethCollateralContract = React.useMemo(
+  const ethLoanContract = React.useMemo(
     () =>
       signer &&
-      cfg.multiCollateralETHAddress &&
-      new ethers.Contract(
-        cfg.multiCollateralETHAddress,
-        MULTI_COLLATERAL_ETH_ABI,
-        signer
-      ),
-    [signer, cfg.multiCollateralETHAddress]
+      cfg.ethLoanContractAddress &&
+      new ethers.Contract(cfg.ethLoanContractAddress, LOAN_ETH_ABI, signer),
+    [signer, cfg.ethLoanContractAddress]
   );
 
-  const shortCollateralContract = React.useMemo(
+  const shortLoanContract = React.useMemo(
     () =>
       signer &&
-      cfg.multiCollateralShortAddress &&
-      new ethers.Contract(
-        cfg.multiCollateralShortAddress,
-        MULTI_COLLATERAL_SHORT_ABI,
-        signer
-      ),
-    [signer, cfg.multiCollateralShortAddress]
+      cfg.shortLoanContractAddress &&
+      new ethers.Contract(cfg.shortLoanContractAddress, LOAN_SHORT_ABI, signer),
+    [signer, cfg.shortLoanContractAddress]
   );
 
-  const collateralContracts = {
-    [LOAN_TYPE_ERC20]: erc20CollateralContract,
-    [LOAN_TYPE_ETH]: ethCollateralContract,
-    [LOAN_TYPE_SHORT]: shortCollateralContract,
+  const loanContracts = {
+    [LOAN_TYPE_ERC20]: erc20LoanContract,
+    [LOAN_TYPE_ETH]: ethLoanContract,
+    [LOAN_TYPE_SHORT]: shortLoanContract,
   };
 
-  const collateralStateContracts = {
-    [LOAN_TYPE_ERC20]: erc20CollateralStateContract,
-    [LOAN_TYPE_ETH]: ethCollateralStateContract,
-    [LOAN_TYPE_SHORT]: shortCollateralStateContract,
+  const loanStateContracts = {
+    [LOAN_TYPE_ERC20]: erc20LoanStateContract,
+    [LOAN_TYPE_ETH]: ethLoanStateContract,
+    [LOAN_TYPE_SHORT]: shortLoanStateContract,
   };
 
   const exchangerContract = React.useMemo(
@@ -246,15 +235,15 @@ export function WalletProvider({ children }) {
         version,
         setVersion,
 
-        erc20CollateralContract,
-        ethCollateralContract,
-        shortCollateralContract,
-        collateralContracts,
+        erc20LoanContract,
+        ethLoanContract,
+        shortLoanContract,
+        loanContracts,
 
-        erc20CollateralStateContract,
-        ethCollateralStateContract,
-        shortCollateralStateContract,
-        collateralStateContracts,
+        erc20LoanStateContract,
+        ethLoanStateContract,
+        shortLoanStateContract,
+        loanStateContracts,
 
         exchangerContract,
       }}
@@ -280,15 +269,15 @@ export function useWallet() {
     version,
     setVersion,
 
-    erc20CollateralContract,
-    ethCollateralContract,
-    shortCollateralContract,
-    collateralContracts,
+    erc20LoanContract,
+    ethLoanContract,
+    shortLoanContract,
+    loanContracts,
 
-    erc20CollateralStateContract,
-    ethCollateralStateContract,
-    shortCollateralStateContract,
-    collateralStateContracts,
+    erc20LoanStateContract,
+    ethLoanStateContract,
+    shortLoanStateContract,
+    loanStateContracts,
 
     exchangerContract,
   } = context;
@@ -305,15 +294,15 @@ export function useWallet() {
     setVersion,
     availableNetworkNames: Object.keys(NETWORKS[version]),
 
-    erc20CollateralContract,
-    ethCollateralContract,
-    shortCollateralContract,
-    collateralContracts,
+    erc20LoanContract,
+    ethLoanContract,
+    shortLoanContract,
+    loanContracts,
 
-    erc20CollateralStateContract,
-    ethCollateralStateContract,
-    shortCollateralStateContract,
-    collateralStateContracts,
+    erc20LoanStateContract,
+    ethLoanStateContract,
+    shortLoanStateContract,
+    loanStateContracts,
 
     exchangerContract,
   };
