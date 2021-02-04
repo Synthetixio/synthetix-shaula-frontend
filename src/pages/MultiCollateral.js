@@ -164,6 +164,9 @@ export default function({ collateralAssets, debtAssetsFilter, short }) {
     ]
   );
 
+  const cratioIsComputed =
+    !!signer && short && !collateralAmount.isZero() && !debtAmount.isZero();
+
   const onConnectOrApproveOrTrade = async () => {
     if (!signer) {
       return connect();
@@ -395,7 +398,9 @@ export default function({ collateralAssets, debtAssetsFilter, short }) {
           color="secondary"
           variant="contained"
           disabled={
-            isTrading || isApproving || (short && cratio.lt(MIN_CRATIO))
+            isTrading ||
+            isApproving ||
+            (cratioIsComputed && cratio.lt(MIN_CRATIO))
           }
           onClick={onConnectOrApproveOrTrade}
         >
@@ -410,7 +415,7 @@ export default function({ collateralAssets, debtAssetsFilter, short }) {
             : label}
         </Button>
 
-        {!short || cratio.isZero() ? null : (
+        {!cratioIsComputed ? null : (
           <Box mt={2} className="flex justify-end">
             <CRatio {...{ cratio }} />
           </Box>
