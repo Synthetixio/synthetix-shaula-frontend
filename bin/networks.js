@@ -59,6 +59,8 @@ async function getNetworkConfig(network) {
     ethLoanStateContractAddress,
     shortLoanStateContractAddress,
 
+    collateralManagerAddress,
+
     exchangerAddress,
     exchangeRatesAddress,
   ] = await Promise.all(
@@ -74,6 +76,8 @@ async function getNetworkConfig(network) {
       'CollateralStateErc20',
       'CollateralStateEth',
       'CollateralStateShort',
+
+      'CollateralManager',
 
       'Exchanger',
       'ExchangeRates',
@@ -120,6 +124,8 @@ async function getNetworkConfig(network) {
     erc20LoanStateContractAddress,
     ethLoanStateContractAddress,
     shortLoanStateContractAddress,
+
+    collateralManagerAddress,
 
     exchangerAddress,
     exchangeRatesAddress,

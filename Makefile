@@ -5,6 +5,10 @@ deploy:
 	@yarn build
 	@surge -d https://synthetix.surge.sh -p build
 
+deploy-staging:
+	@yarn build
+	@surge -d https://synthetix-staging.surge.sh -p build
+
 deploy-ipfs:
 	@yarn build
 #	@ipfs-deploy -p pinata build

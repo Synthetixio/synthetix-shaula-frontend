@@ -33,7 +33,9 @@
     "erc20LoanStateContractAddress": "0x54277B3a7A4aEe0fdF279E16aBF9D5Dad87828D6",
     "ethLoanStateContractAddress": "0x04D9231B1fff88464a3d26Fd91A1bA0b24796107",
     "shortLoanStateContractAddress": "0xd322259B4D93F81a2a59f6010BEC166F6f5E870c",
-    "exchangerAddress": "0x0bfDc04B38251394542586969E2356d0D731f7DE"
+    "collateralManagerAddress": "0x067e398605E84F2D0aEEC1806e62768C5110DCc6",
+    "exchangerAddress": "0x0bfDc04B38251394542586969E2356d0D731f7DE",
+    "exchangeRatesAddress": "0xd69b189020EF614796578AfE4d10378c5e7e1138"
   },
   "kovan": {
     "tokens": {
@@ -106,7 +108,8 @@
     "erc20LoanStateContractAddress": "0xe2fd57caF070A3F995D597a8B21cbF206E34Ff38",
     "ethLoanStateContractAddress": "0x8f28322A3e85296D00dc3c378519AaB7f570bA79",
     "shortLoanStateContractAddress": "0xFAdbaf925eC35D97ae3EB87b458d005Dfd4C4b52",
+    "collateralManagerAddress": "0xFC4B21B7CC5DCC62aE4ae229Ee96Af1DB1678F35",
     "exchangerAddress": "0x0260F7587a73815E3747Ce3D31FAF1383E1B653a",
-    "exchangeRatesAddress": "0xC9985cAc4a69588Da66F74E42845B784798fe5aB"
+    "exchangeRatesAddress": "0x8a8DeBDF5Ca68d381dE99244AAEa8b906Daf78A7"
   }
 }

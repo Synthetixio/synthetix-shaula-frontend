@@ -17,6 +17,7 @@ import LOAN_ETH_ABI from 'abis/loan-eth.json';
 import LOAN_SHORT_ABI from 'abis/loan-short.json';
 import EXCHANGER_ABI from 'abis/exchanger.json';
 import EXCHANGE_RATES_ABI from 'abis/exchange-rates.json';
+import COLLATERAL_MANAGER_ABI from 'abis/collateral-manager.json';
 
 const DEFAULT_NETWORK_ID = 1;
 
@@ -150,6 +151,18 @@ export function WalletProvider({ children }) {
     [signer, cfg.exchangeRatesAddress]
   );
 
+  const collateralManagerContract = React.useMemo(
+    () =>
+      signer &&
+      cfg.collateralManagerAddress &&
+      new ethers.Contract(
+        cfg.collateralManagerAddress,
+        COLLATERAL_MANAGER_ABI,
+        signer
+      ),
+    [signer, cfg.collateralManagerAddress]
+  );
+
   const connect = React.useCallback(
     async tryCached => {
       if (address) return;
@@ -256,6 +269,8 @@ export function WalletProvider({ children }) {
 
         exchangerContract,
         exchangeRatesContract,
+
+        collateralManagerContract,
       }}
     >
       {children}
@@ -291,6 +306,8 @@ export function useWallet() {
 
     exchangerContract,
     exchangeRatesContract,
+
+    collateralManagerContract,
   } = context;
 
   return {
@@ -317,6 +334,8 @@ export function useWallet() {
 
     exchangerContract,
     exchangeRatesContract,
+
+    collateralManagerContract,
   };
 }
 

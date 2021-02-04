@@ -5,7 +5,7 @@ import clsx from 'clsx';
 import * as ethers from 'ethers';
 import { useWallet } from 'contexts/wallet';
 import Loader from 'components/Loader';
-import { formatUnits } from 'utils/big-number';
+import { formatUnits, toFixed } from 'utils/big-number';
 import { useNotifications } from 'contexts/notifications';
 import REWARDS_CONTRACT_ABI from 'abis/shorting-rewards.json';
 
@@ -49,6 +49,7 @@ export default function() {
     version,
     config: { tokenCurrencies },
     shortLoanContract,
+    collateralManagerContract,
   } = useWallet();
 
   const [isLoading, setIsLoading] = React.useState(false);
@@ -100,7 +101,15 @@ export default function() {
       setIsLoading(false);
       return;
     }
-    if (!(rewardsContracts.length && address && signer)) {
+    if (
+      !(
+        rewardsContracts.length &&
+        address &&
+        signer &&
+        collateralManagerContract &&
+        tokenCurrencies
+      )
+    ) {
       return setIsLoading(true);
     }
 
@@ -108,11 +117,26 @@ export default function() {
     const unsubs = [() => (isMounted = false)];
 
     const load = async () => {
-      const getRewards = async ({ contract: rewardsContract, ...rest }) => ({
-        ...rest,
-        rewardsContract,
-        claimAmount: await rewardsContract.earned(address),
-      });
+      const getRewards = async ({
+        contract: rewardsContract,
+        currency,
+        ...rest
+      }) => {
+        const [totalPositionsValue, claimAmount] = await Promise.all([
+          collateralManagerContract.short(tokenCurrencies[currency]),
+          rewardsContract.earned(address),
+        ]);
+        console.trace();
+        return {
+          ...rest,
+          rewardsContract,
+          currency,
+          claimAmount,
+          apy: totalPositionsValue.isZero()
+            ? ethers.BigNumber.from('0')
+            : claimAmount.mul(52 * 100).div(totalPositionsValue),
+        };
+      };
       try {
         const rewards = (
           await Promise.all(rewardsContracts.map(getRewards))
@@ -120,7 +144,8 @@ export default function() {
         if (isMounted) {
           setRewards(rewards);
         }
-      } catch {
+      } catch (e) {
+        console.error(e);
         if (isMounted) {
           setRewards([]);
         }
@@ -148,7 +173,14 @@ export default function() {
     return () => {
       unsubs.forEach(unsub => unsub());
     };
-  }, [address, rewardsContracts, version, signer]);
+  }, [
+    address,
+    rewardsContracts,
+    version,
+    signer,
+    collateralManagerContract,
+    tokenCurrencies,
+  ]);
 
   return !signer ? null : (
     <Paper className={classes.container}>
@@ -174,7 +206,7 @@ export default function() {
   );
 }
 
-function Reward({ currency, loadRewards, claimAmount }) {
+function Reward({ currency, claimAmount, apy }) {
   // const classes = useStyles();
   const { tx } = useNotifications();
 
@@ -183,7 +215,6 @@ function Reward({ currency, loadRewards, claimAmount }) {
     shortLoanContract,
     config: { tokenCurrencies },
   } = useWallet();
-
   const [isClaiming, setIsClaiming] = React.useState(false);
 
   const claim = async () => {
@@ -205,8 +236,14 @@ function Reward({ currency, loadRewards, claimAmount }) {
   };
 
   return (
-    <Box mb={1}>
-      {formatUnits(claimAmount, 18, 4)} SNX ({currency}){' '}
+    <Box mb={1} className="flex items-center">
+      <Box mr={1} className="flex items-center">
+        {formatUnits(claimAmount, 18, 4)} SNX (
+        <small>
+          {currency}, apy: {toFixed(apy, 1, 0)}%
+        </small>
+        )
+      </Box>
       <Button
         color="secondary"
         variant="outlined"
