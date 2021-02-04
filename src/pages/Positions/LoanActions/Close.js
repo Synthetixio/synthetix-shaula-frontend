@@ -14,7 +14,8 @@ export default function({ loan, collateralName, debtName, closeModal }) {
   } = useWallet();
   const { tx } = useNotifications();
 
-  const [collateralDecimals] = tokens[collateralName];
+  // const [collateralDecimals] = tokens[collateralName]; // renBTC shoul be 8
+  const collateralDecimals = 18;
   const [debtDecimals] = tokens[debtName];
 
   const loanContract = loanContracts[loan.type];
