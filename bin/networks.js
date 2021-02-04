@@ -60,6 +60,7 @@ async function getNetworkConfig(network) {
     shortLoanStateContractAddress,
 
     exchangerAddress,
+    exchangeRatesAddress,
   ] = await Promise.all(
     [
       'ProxysBTC',
@@ -75,6 +76,7 @@ async function getNetworkConfig(network) {
       'CollateralStateShort',
 
       'Exchanger',
+      'ExchangeRates',
     ].map(request.bind(null, network))
   );
 
@@ -120,6 +122,7 @@ async function getNetworkConfig(network) {
     shortLoanStateContractAddress,
 
     exchangerAddress,
+    exchangeRatesAddress,
   };
 
   return cfg;

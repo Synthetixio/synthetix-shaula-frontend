@@ -15,3 +15,5 @@ export const SUCCESS_COLOR = '#43a047';
 export const DANGER_COLOR = '#d32f2f';
 
 export const INFURA_ID = process.env.REACT_APP_INFURA_ID;
+
+export const MIN_CRATIO = 150;

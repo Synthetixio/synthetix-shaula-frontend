@@ -1,12 +1,21 @@
 import React from 'react';
 import * as ethers from 'ethers';
 import { makeStyles } from '@material-ui/core/styles';
-import { Paper, Select, MenuItem, TextField, Button } from '@material-ui/core';
+import {
+  Box,
+  Paper,
+  Select,
+  MenuItem,
+  TextField,
+  Button,
+} from '@material-ui/core';
 import { useWallet } from 'contexts/wallet';
-import { formatUnits } from 'utils/big-number';
+import { isZero, formatUnits } from 'utils/big-number';
 import Balance from 'components/Balance';
+import CRatio from 'components/CRatio';
 import ERC20_CONTRACT_ABI from 'abis/erc20.json';
 import { useNotifications } from 'contexts/notifications';
+import { MIN_CRATIO } from 'config';
 
 export const useStyles = makeStyles(theme => ({
   container: {
@@ -71,15 +80,17 @@ export default function({ collateralAssets, debtAssetsFilter, short }) {
       ethLoanContractAddress,
       shortLoanContractAddress,
     },
-
     erc20LoanContract,
     ethLoanContract,
     shortLoanContract,
+    exchangeRatesContract,
   } = useWallet();
 
   const [isApproving, setIsApproving] = React.useState(false);
   const [isApproved, setIsApproved] = React.useState(false);
   const [isTrading, setIsTrading] = React.useState(false);
+
+  const [cratio, setCRatio] = React.useState(ethers.BigNumber.from('0'));
 
   const [debtName, setDebtAsset] = React.useState(
     debtAssetsFilter(collateralAssets[0])[0]
@@ -256,6 +267,45 @@ export default function({ collateralAssets, debtAssetsFilter, short }) {
     collateralAmount,
   ]);
 
+  // cratio
+  React.useEffect(() => {
+    let isMounted = true;
+    (async () => {
+      if (
+        !(
+          short &&
+          exchangeRatesContract &&
+          tokenCurrencies[collateralName] &&
+          tokenCurrencies[debtName] &&
+          !isZero(collateralAmount) &&
+          !isZero(debtAmount)
+        )
+      ) {
+        return setCRatio(ethers.BigNumber.from('0'));
+      }
+      const [collateralUSDPrice] = await exchangeRatesContract.rateAndInvalid(
+        tokenCurrencies[collateralName]
+      );
+      const [debtUSDPrice] = await exchangeRatesContract.rateAndInvalid(
+        tokenCurrencies[debtName]
+      );
+      const cratio = collateralAmount
+        .mul(collateralUSDPrice)
+        .mul(100)
+        .div(debtUSDPrice.mul(debtAmount));
+      if (isMounted) setCRatio(cratio);
+    })();
+    return () => (isMounted = false);
+  }, [
+    short,
+    tokenCurrencies,
+    collateralAmount,
+    collateralName,
+    debtAmount,
+    debtName,
+    exchangeRatesContract,
+  ]);
+
   return (
     <Paper className={classes.container}>
       <div className={classes.content}>
@@ -344,7 +394,9 @@ export default function({ collateralAssets, debtAssetsFilter, short }) {
         <Button
           color="secondary"
           variant="contained"
-          disabled={isTrading || isApproving}
+          disabled={
+            isTrading || isApproving || (short && cratio.lt(MIN_CRATIO))
+          }
           onClick={onConnectOrApproveOrTrade}
         >
           {isTrading
@@ -357,6 +409,12 @@ export default function({ collateralAssets, debtAssetsFilter, short }) {
             ? 'Approve'
             : label}
         </Button>
+
+        {!short || cratio.isZero() ? null : (
+          <Box mt={2} className="flex justify-end">
+            <CRatio {...{ cratio }} />
+          </Box>
+        )}
       </div>
     </Paper>
   );

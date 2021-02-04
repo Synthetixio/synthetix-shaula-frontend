@@ -16,6 +16,7 @@ import LOAN_ERC20_ABI from 'abis/loan-erc20.json';
 import LOAN_ETH_ABI from 'abis/loan-eth.json';
 import LOAN_SHORT_ABI from 'abis/loan-short.json';
 import EXCHANGER_ABI from 'abis/exchanger.json';
+import EXCHANGE_RATES_ABI from 'abis/exchange-rates.json';
 
 const DEFAULT_NETWORK_ID = 1;
 
@@ -141,6 +142,14 @@ export function WalletProvider({ children }) {
     [signer, cfg.exchangerAddress]
   );
 
+  const exchangeRatesContract = React.useMemo(
+    () =>
+      signer &&
+      cfg.exchangeRatesAddress &&
+      new ethers.Contract(cfg.exchangeRatesAddress, EXCHANGE_RATES_ABI, signer),
+    [signer, cfg.exchangeRatesAddress]
+  );
+
   const connect = React.useCallback(
     async tryCached => {
       if (address) return;
@@ -246,6 +255,7 @@ export function WalletProvider({ children }) {
         loanStateContracts,
 
         exchangerContract,
+        exchangeRatesContract,
       }}
     >
       {children}
@@ -280,6 +290,7 @@ export function useWallet() {
     loanStateContracts,
 
     exchangerContract,
+    exchangeRatesContract,
   } = context;
 
   return {
@@ -305,6 +316,7 @@ export function useWallet() {
     loanStateContracts,
 
     exchangerContract,
+    exchangeRatesContract,
   };
 }
 

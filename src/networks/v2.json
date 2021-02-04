@@ -33,7 +33,8 @@
     "erc20LoanStateContractAddress": "0x8A1A00Df7aA0102497C7591912bA8301e8dB8CdB",
     "ethLoanStateContractAddress": "0xbe5B5a7c198bC156474ed5c33CBf2F3F604F8fF8",
     "shortLoanStateContractAddress": "0x13A114a3Fa8A6CE03a0C5488BE9e614d78eDdb0c",
-    "exchangerAddress": "0x0bfDc04B38251394542586969E2356d0D731f7DE"
+    "exchangerAddress": "0x0bfDc04B38251394542586969E2356d0D731f7DE",
+    "exchangeRatesAddress": "0xd69b189020EF614796578AfE4d10378c5e7e1138"
   },
   "kovan": {
     "tokens": {
@@ -69,7 +70,8 @@
     "erc20LoanStateContractAddress": "0x04C3f6207BE48De777967eB1886469E4E268FE07",
     "ethLoanStateContractAddress": "0x4B58bbB4Ff947315b558904fDcEbbdA65b9523aD",
     "shortLoanStateContractAddress": "0xd74E3A605A1a7A8a83D25DF00D4057985E3CAC30",
-    "exchangerAddress": "0xF49528689234d46724383669BD8658bfB47f8575"
+    "exchangerAddress": "0xF49528689234d46724383669BD8658bfB47f8575",
+    "exchangeRatesAddress": "0xC9985cAc4a69588Da66F74E42845B784798fe5aB"
   },
   "rinkeby": {
     "tokens": {
@@ -105,6 +107,7 @@
     "erc20LoanStateContractAddress": "0xe2fd57caF070A3F995D597a8B21cbF206E34Ff38",
     "ethLoanStateContractAddress": "0x8f28322A3e85296D00dc3c378519AaB7f570bA79",
     "shortLoanStateContractAddress": "0xFAdbaf925eC35D97ae3EB87b458d005Dfd4C4b52",
-    "exchangerAddress": "0x0260F7587a73815E3747Ce3D31FAF1383E1B653a"
+    "exchangerAddress": "0x0260F7587a73815E3747Ce3D31FAF1383E1B653a",
+    "exchangeRatesAddress": "0x8a8DeBDF5Ca68d381dE99244AAEa8b906Daf78A7"
   }
 }
