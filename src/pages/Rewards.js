@@ -100,7 +100,7 @@ export default function() {
       setIsLoading(false);
       return;
     }
-    if (!(rewardsContracts.length && address)) {
+    if (!(rewardsContracts.length && address && signer)) {
       return setIsLoading(true);
     }
 
@@ -137,6 +137,10 @@ export default function() {
         contract.on(claimEvent, load);
         unsubs.push(() => contract.off(claimEvent, load));
       });
+
+      const newBlockEvent = 'block';
+      signer.provider.on(newBlockEvent, load);
+      unsubs.push(() => signer.provider.off(newBlockEvent, load));
     };
 
     load();
@@ -144,7 +148,7 @@ export default function() {
     return () => {
       unsubs.forEach(unsub => unsub());
     };
-  }, [address, rewardsContracts, version]);
+  }, [address, rewardsContracts, version, signer]);
 
   return !signer ? null : (
     <Paper className={classes.container}>
