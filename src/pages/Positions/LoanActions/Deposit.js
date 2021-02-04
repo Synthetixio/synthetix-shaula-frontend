@@ -87,7 +87,11 @@ export default function({ loan, collateralName, closeModal }) {
       await tx(
         `Approving ${collateralName}`,
         `Approved ${collateralName}`,
-        () => collateralContract.approve(loanContractAddress, collateralAmount)
+        () => [
+          collateralContract,
+          'approve',
+          [loanContractAddress, collateralAmount],
+        ]
       );
 
       if (collateralIsETH || !(signer && loanContractAddress && address))
@@ -97,6 +101,7 @@ export default function({ loan, collateralName, closeModal }) {
         loanContractAddress
       );
       setIsApproved(allowance.gte(collateralAmount));
+    } catch {
     } finally {
       setIsWorking(false);
     }
@@ -108,12 +113,15 @@ export default function({ loan, collateralName, closeModal }) {
       await tx(
         `Adding collateral to loan(#${loan.id.toString()})`,
         `Added collateral to loan(#${loan.id.toString()}).`,
-        () =>
-          loanContract.deposit(
+        () => [
+          loanContract,
+          'deposit',
+          [
             address,
             loan.id,
-            collateralIsETH ? { value: collateralAmount } : collateralAmount
-          )
+            collateralIsETH ? { value: collateralAmount } : collateralAmount,
+          ],
+        ]
       );
       closeModal();
     } catch {

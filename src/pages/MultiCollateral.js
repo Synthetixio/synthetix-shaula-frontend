@@ -182,7 +182,11 @@ export default function({ collateralAssets, debtAssetsFilter, short }) {
       await tx(
         `Approving ${collateralName}`,
         `Approved ${collateralName}`,
-        () => collateralContract.approve(loanContractAddress, collateralAmount)
+        () => [
+          collateralContract,
+          'approve',
+          [loanContractAddress, collateralAmount],
+        ]
       );
 
       if (collateralIsETH || !(signer && loanContractAddress && address))
@@ -192,6 +196,7 @@ export default function({ collateralAssets, debtAssetsFilter, short }) {
         loanContractAddress
       );
       setIsApproved(allowance.gte(collateralAmount));
+    } catch {
     } finally {
       setIsApproving(false);
     }
@@ -207,17 +212,21 @@ export default function({ collateralAssets, debtAssetsFilter, short }) {
       await tx(
         `${label}ing ${formatUnits(debtAmount, debtDecimals)} ${debtName}`,
         `${label}ed ${formatUnits(debtAmount, debtDecimals)} ${debtName}`,
-        () =>
+        () => [
+          loanContract,
+          'open',
           collateralIsETH
-            ? loanContract.open(debtAmount, tokenCurrencies[debtName], {
-                value: collateralAmount,
-              })
-            : loanContract.open(
-                collateralAmount,
+            ? [
                 debtAmount,
-                tokenCurrencies[debtName]
-              )
+                tokenCurrencies[debtName],
+                {
+                  value: collateralAmount,
+                },
+              ]
+            : [collateralAmount, debtAmount, tokenCurrencies[debtName]],
+        ]
       );
+    } catch {
     } finally {
       setIsTrading(false);
     }

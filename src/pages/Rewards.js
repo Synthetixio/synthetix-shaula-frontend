@@ -113,12 +113,21 @@ export default function() {
         rewardsContract,
         claimAmount: await rewardsContract.earned(address),
       });
-      const rewards = (
-        await Promise.all(rewardsContracts.map(getRewards))
-      ).filter(r => !r.claimAmount.isZero());
-      if (isMounted) {
-        setRewards(rewards);
-        setIsLoading(false);
+      try {
+        const rewards = (
+          await Promise.all(rewardsContracts.map(getRewards))
+        ).filter(r => !r.claimAmount.isZero());
+        if (isMounted) {
+          setRewards(rewards);
+        }
+      } catch {
+        if (isMounted) {
+          setRewards([]);
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
 
@@ -163,7 +172,7 @@ export default function() {
 
 function Reward({ currency, loadRewards, claimAmount }) {
   // const classes = useStyles();
-  const { tx, showErrorNotification } = useNotifications();
+  const { tx } = useNotifications();
 
   const {
     address,
@@ -179,10 +188,13 @@ function Reward({ currency, loadRewards, claimAmount }) {
       await tx(
         `Claiming ${currency} reward.`,
         `You have successfully claimed your ${currency} short rewards.`,
-        () => shortLoanContract.getReward(tokenCurrencies[currency], address)
+        () => [
+          shortLoanContract,
+          'getReward',
+          [tokenCurrencies[currency], address],
+        ]
       );
-    } catch (e) {
-      showErrorNotification(e);
+    } catch {
     } finally {
       setIsClaiming(false);
     }

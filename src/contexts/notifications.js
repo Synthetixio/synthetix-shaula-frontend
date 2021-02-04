@@ -1,4 +1,5 @@
 import React from 'react';
+// import * as ethers from 'ethers';
 import { useSnackbar } from 'notistack';
 
 const NotificationsContext = React.createContext(null);
@@ -18,7 +19,12 @@ export function NotificationsProvider({ children }) {
     enqueueSnackbar(
       {
         type: 'error',
-        message: msg?.error?.message || msg.responseText || msg.message || msg,
+        message:
+          msg?.data ||
+          msg?.error?.message ||
+          msg?.responseText ||
+          msg?.message ||
+          msg,
       },
       {
         persist: true,
@@ -38,9 +44,23 @@ export function NotificationsProvider({ children }) {
     );
 
   const tx = async (startNotification, endNotification, makeTx) => {
+    const [contract, method, args] = makeTx();
+    let hash, wait;
     try {
-      const { hash, wait } = await makeTx();
-      showTxNotification(startNotification, hash);
+      ({ hash, wait } = await contract[method](...args));
+    } catch (e) {
+      try {
+        await contract.callStatic[method](...args);
+        throw e;
+      } catch (e) {
+        showErrorNotification(e.data ? hexToASCII(e.data) : e);
+        throw e;
+      }
+    }
+
+    showTxNotification(startNotification, hash);
+
+    try {
       await wait();
       showSuccessNotification(endNotification, hash);
     } catch (e) {
@@ -80,4 +100,15 @@ export function useNotifications() {
     showSuccessNotification,
     tx,
   };
+}
+
+function hexToASCII(S) {
+  // https://gist.github.com/gluk64/fdea559472d957f1138ed93bcbc6f78a#file-reason-js
+  // return ethers.utils.toUtf8String(S.split(' ')[1].toString());
+  const hex = S.substr(147).toString();
+  let str = '';
+  for (var n = 0; n < hex.length; n += 2) {
+    str += String.fromCharCode(parseInt(hex.substr(n, 2), 16));
+  }
+  return str;
 }

@@ -136,7 +136,7 @@ export default function() {
 
 function Owing({ loadOwings, reclaimAmount, currency }) {
   // const classes = useStyles();
-  const { tx, showErrorNotification } = useNotifications();
+  const { tx } = useNotifications();
 
   const {
     address,
@@ -152,12 +152,11 @@ function Owing({ loadOwings, reclaimAmount, currency }) {
       await tx(
         `Settling ${currency} owed.`,
         `You have successfully settled ${currency} owed.`,
-        () => exchangerContract.settle(address, currency)
+        () => [exchangerContract, 'settle', [address, currency]]
       );
       await sleep(1000);
       await loadOwings();
-    } catch (e) {
-      showErrorNotification(e);
+    } catch {
     } finally {
       setIsSettling(false);
     }

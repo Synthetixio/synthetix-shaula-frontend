@@ -31,7 +31,7 @@ export default function({ loan, debtName, closeModal }) {
       await tx(
         `Increasing debt for loan(#${loan.id.toString()})`,
         `Increased debt for loan(#${loan.id.toString()}).`,
-        () => loanContracts[loan.type].draw(loan.id, amount)
+        () => [loanContracts[loan.type], 'draw', [loan.id, amount]]
       );
       closeModal();
     } catch {

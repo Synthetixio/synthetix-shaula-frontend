@@ -42,7 +42,7 @@ export const useStyles = makeStyles(theme => ({
 
 export default function() {
   const classes = useStyles();
-  const { tx, showErrorNotification } = useNotifications();
+  const { tx } = useNotifications();
 
   const { signer, address, ethLoanContract } = useWallet();
 
@@ -62,7 +62,7 @@ export default function() {
           pendingWithdrawals,
           18
         )} ETH.`,
-        () => ethLoanContract.claim(pw)
+        () => [ethLoanContract, 'claim', [pw]]
       );
       await sleep(1000);
 
@@ -74,8 +74,7 @@ export default function() {
         setIsLoading,
         address,
       });
-    } catch (e) {
-      showErrorNotification(e);
+    } catch {
     } finally {
       setIsClaiming(false);
     }

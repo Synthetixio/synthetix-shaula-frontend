@@ -10,7 +10,6 @@ import {
 import { useWallet } from 'contexts/wallet';
 import { useNotifications } from 'contexts/notifications';
 import Balance from 'components/Balance';
-import ERC20_CONTRACT_ABI from 'abis/erc20.json';
 import { useStyles, CloseButton } from './utils';
 
 export default function({ loan, debtName, closeModal }) {
@@ -20,10 +19,8 @@ export default function({ loan, debtName, closeModal }) {
     loanContracts,
     address,
     config: { tokens },
-    signer,
   } = useWallet();
   const { tx } = useNotifications();
-  const [isApproved, setIsApproved] = React.useState(false);
 
   const [debtDecimals, debtAddress] = tokens[debtName];
 
@@ -36,63 +33,16 @@ export default function({ loan, debtName, closeModal }) {
     }
   }, [debtAmountNumber, debtDecimals]);
 
-  const debtContract = React.useMemo(
-    () =>
-      signer &&
-      debtAddress &&
-      new ethers.Contract(debtAddress, ERC20_CONTRACT_ABI, signer),
-    [debtAddress, signer]
-  );
-
   const loanContract = loanContracts[loan.type];
-  const loanContractAddress = loanContract.address;
-
-  React.useEffect(() => {
-    let isMounted = true;
-    (async () => {
-      if (!(debtContract && loanContractAddress && address)) {
-        return setIsApproved(true);
-      }
-      const allowance = await debtContract.allowance(
-        address,
-        loanContractAddress
-      );
-      if (isMounted) setIsApproved(allowance.gte(debtAmount));
-    })();
-    return () => (isMounted = false);
-  }, [debtContract, address, loanContractAddress, debtAmount]);
-
-  const onApproveOrRepay = async e => {
-    e.preventDefault();
-    !isApproved ? approve() : repay();
-  };
-
-  const approve = async () => {
-    try {
-      setIsWorking('Approving...');
-      await tx(`Approving ${debtName}`, `Approved ${debtName}`, () =>
-        debtContract.approve(loanContractAddress, debtAmount)
-      );
-
-      if (!(signer && loanContractAddress && address))
-        return setIsApproved(true);
-      const allowance = await debtContract.allowance(
-        address,
-        loanContractAddress
-      );
-      setIsApproved(allowance.gte(debtAmount));
-    } finally {
-      setIsWorking(false);
-    }
-  };
 
   const repay = async e => {
+    e.preventDefault();
     try {
       setIsWorking('Repaying...');
       await tx(
         `Repaying debt for loan(#${loan.id.toString()})`,
         `Repaying debt for loan(#${loan.id.toString()}).`,
-        () => loanContract.repay(address, loan.id, debtAmount)
+        () => [loanContract, 'repay', [address, loan.id, debtAmount]]
       );
       closeModal();
     } catch {
@@ -107,7 +57,7 @@ export default function({ loan, debtName, closeModal }) {
         <CloseButton onClose={closeModal} />
       </DialogTitle>
       <DialogContent className={classes.body}>
-        <form onSubmit={onApproveOrRepay}>
+        <form onSubmit={repay}>
           <Box mb={2}>
             <TextField
               id="amount"
@@ -138,7 +88,7 @@ export default function({ loan, debtName, closeModal }) {
               disabled={!!isWorking}
               type="submit"
             >
-              {isWorking ? isWorking : !isApproved ? 'Approve' : 'Repay'}
+              {isWorking ? isWorking : 'Repay'}
             </Button>
           </Box>
         </form>

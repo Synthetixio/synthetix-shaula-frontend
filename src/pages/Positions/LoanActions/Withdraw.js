@@ -35,7 +35,7 @@ export default function({ loan, collateralName, closeModal }) {
       await tx(
         `Withdrawing collateral to loan(#${loan.id.toString()})`,
         `Withdrew collateral to loan(#${loan.id.toString()}).`,
-        () => loanContracts[loan.type].withdraw(loan.id, amount)
+        () => [loanContracts[loan.type], 'withdraw', [loan.id, amount]]
       );
       closeModal();
     } catch {
