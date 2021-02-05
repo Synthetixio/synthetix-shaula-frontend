@@ -9,6 +9,7 @@ import {
   INFURA_ID,
 } from 'config';
 import cache from 'utils/cache';
+import { bytesFormatter } from 'utils/snx';
 import NETWORKS_V1 from 'networks/v1.json';
 import NETWORKS_V2 from 'networks/v2.json';
 import LOAN_STATE_ABI from 'abis/loan-state.json';
@@ -17,6 +18,7 @@ import LOAN_ETH_ABI from 'abis/loan-eth.json';
 import LOAN_SHORT_ABI from 'abis/loan-short.json';
 import EXCHANGER_ABI from 'abis/exchanger.json';
 import EXCHANGE_RATES_ABI from 'abis/exchange-rates.json';
+import COLLATERAL_MANAGER_ABI from 'abis/collateral-manager.json';
 
 const DEFAULT_NETWORK_ID = 1;
 
@@ -51,15 +53,16 @@ export function WalletProvider({ children }) {
     const cfg = NETWORKS[version][network];
     if (!cfg) return {};
 
-    const tokenCurrenciesByAddress = Object.entries(cfg.tokenCurrencies).reduce(
-      (r, [k, v]) => {
-        r[v] = k;
-        return r;
-      },
-      {}
-    );
+    const tokenKeysByName = {};
+    const tokenKeysByKey = {};
 
-    return { ...cfg, tokenCurrenciesByAddress };
+    ['sBTC', 'sETH', 'sUSD', 'SNX'].forEach(currency => {
+      const key = bytesFormatter(currency);
+      tokenKeysByName[currency] = key;
+      tokenKeysByKey[key] = currency;
+    });
+
+    return { ...cfg, tokenKeysByName, tokenKeysByKey };
   }, [network, version]);
 
   const erc20LoanStateContract = React.useMemo(
@@ -148,6 +151,18 @@ export function WalletProvider({ children }) {
       cfg.exchangeRatesAddress &&
       new ethers.Contract(cfg.exchangeRatesAddress, EXCHANGE_RATES_ABI, signer),
     [signer, cfg.exchangeRatesAddress]
+  );
+
+  const collateralManagerContract = React.useMemo(
+    () =>
+      signer &&
+      cfg.collateralManagerAddress &&
+      new ethers.Contract(
+        cfg.collateralManagerAddress,
+        COLLATERAL_MANAGER_ABI,
+        signer
+      ),
+    [signer, cfg.collateralManagerAddress]
   );
 
   const connect = React.useCallback(
@@ -256,6 +271,8 @@ export function WalletProvider({ children }) {
 
         exchangerContract,
         exchangeRatesContract,
+
+        collateralManagerContract,
       }}
     >
       {children}
@@ -291,6 +308,8 @@ export function useWallet() {
 
     exchangerContract,
     exchangeRatesContract,
+
+    collateralManagerContract,
   } = context;
 
   return {
@@ -317,6 +336,8 @@ export function useWallet() {
 
     exchangerContract,
     exchangeRatesContract,
+
+    collateralManagerContract,
   };
 }
 

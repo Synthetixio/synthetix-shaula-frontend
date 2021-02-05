@@ -28,13 +28,13 @@ export default function({ loan, onActOnLoan }) {
   const classes = useStyles();
 
   const {
-    config: { tokenCurrenciesByAddress },
+    config: { tokenKeysByKey },
   } = useWallet();
 
-  const targetName = React.useMemo(
-    () => tokenCurrenciesByAddress[loan.currency],
-    [tokenCurrenciesByAddress, loan]
-  );
+  const targetName = React.useMemo(() => tokenKeysByKey[loan.currency], [
+    tokenKeysByKey,
+    loan,
+  ]);
   const collateralName = React.useMemo(
     () =>
       ({
@@ -63,18 +63,18 @@ export default function({ loan, onActOnLoan }) {
       <TableCell>
         {formatUnits(loan.amount, 18)} {targetName}
       </TableCell>
-      <TableCell align="center">
+      <TableCell align="right">
         {formatUnits(loan.accruedInterest, 18)}
       </TableCell>
       <TableCell
-        align="center"
+        align="right"
         className={clsx(
           loan.cratio.lt(loan.minCRatio)
             ? classes.dangerCRatio
             : classes.okCRatio
         )}
       >
-        <div className="flex items-center">
+        <div className="flex items-center justify-end">
           {formatUnits(loan.cratio, 16, 0)}&nbsp;
           <Tooltip
             title={

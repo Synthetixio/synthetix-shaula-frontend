@@ -42,13 +42,13 @@ export const useStyles = makeStyles(theme => ({
   },
 }));
 
-export default function() {
+export default function({ className }) {
   const classes = useStyles();
 
   const {
     signer,
     address,
-    config: { tokenCurrencies },
+    config: { tokenKeysByName },
     exchangerContract,
   } = useWallet();
 
@@ -61,7 +61,7 @@ export default function() {
     isMounted,
     setOwings,
     setIsLoading,
-    tokenCurrencies,
+    tokenKeysByName,
   }) => {
     const getOwingsByCurrency = async ([currency, key]) => ({
       currency,
@@ -69,7 +69,7 @@ export default function() {
     });
     const owings = (
       await Promise.all(
-        Object.entries(tokenCurrencies).map(getOwingsByCurrency)
+        Object.entries(tokenKeysByName).map(getOwingsByCurrency)
       )
     ).filter(o => !o.reclaimAmount.isZero());
     if (isMounted) {
@@ -79,7 +79,7 @@ export default function() {
   };
 
   React.useEffect(() => {
-    if (!(exchangerContract && tokenCurrencies && address)) {
+    if (!(exchangerContract && tokenKeysByName && address)) {
       return setIsLoading(true);
     }
 
@@ -93,7 +93,7 @@ export default function() {
         isMounted,
         setOwings,
         setIsLoading,
-        tokenCurrencies,
+        tokenKeysByName,
       });
     };
 
@@ -108,10 +108,10 @@ export default function() {
     return () => {
       unsubs.forEach(unsub => unsub());
     };
-  }, [exchangerContract, tokenCurrencies, address]);
+  }, [exchangerContract, tokenKeysByName, address]);
 
   return !signer ? null : (
-    <Paper className={classes.container}>
+    <Paper className={clsx(classes.container, className)}>
       <div className={classes.content}>
         <div className={classes.heading}>Owings</div>
         <div className={classes.p}>
@@ -141,7 +141,7 @@ function Owing({ loadOwings, reclaimAmount, currency }) {
   const {
     address,
     exchangerContract,
-    config: { tokenCurrenciesByAddress },
+    config: { tokenKeysByKey },
   } = useWallet();
 
   const [isSettling, setIsSettling] = React.useState(false);
@@ -164,7 +164,7 @@ function Owing({ loadOwings, reclaimAmount, currency }) {
 
   return (
     <div>
-      {formatUnits(reclaimAmount, 18)} {tokenCurrenciesByAddress[currency]}{' '}
+      {formatUnits(reclaimAmount, 18)} {tokenKeysByKey[currency]}{' '}
       <Button
         color="secondary"
         variant="outlined"

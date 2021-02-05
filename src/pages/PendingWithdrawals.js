@@ -40,7 +40,7 @@ export const useStyles = makeStyles(theme => ({
   },
 }));
 
-export default function() {
+export default function({ className }) {
   const classes = useStyles();
   const { tx } = useNotifications();
 
@@ -112,7 +112,7 @@ export default function() {
   }, [ethLoanContract, address]);
 
   return !signer ? null : (
-    <Paper className={classes.container}>
+    <Paper className={clsx(classes.container, className)}>
       <div className={classes.content}>
         <div className={classes.heading}>Pending Withdrawals</div>
         <div className={classes.p}>

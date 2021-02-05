@@ -63,7 +63,7 @@ export const useStyles = makeStyles(theme => ({
   },
 }));
 
-export default function({ collateralAssets, debtAssetsFilter, short }) {
+export default function({ collateralAssetsFilter, debtAssets, short }) {
   const classes = useStyles();
   const label = short ? 'Short' : 'Borrow';
 
@@ -75,7 +75,7 @@ export default function({ collateralAssets, debtAssetsFilter, short }) {
     connect,
     config: {
       tokens,
-      tokenCurrencies,
+      tokenKeysByName,
       erc20LoanContractAddress,
       ethLoanContractAddress,
       shortLoanContractAddress,
@@ -92,12 +92,7 @@ export default function({ collateralAssets, debtAssetsFilter, short }) {
 
   const [cratio, setCRatio] = React.useState(ethers.BigNumber.from('0'));
 
-  const [debtName, setDebtAsset] = React.useState(
-    debtAssetsFilter(collateralAssets[0])[0]
-  );
-  const [debtAssets, setDebtAssets] = React.useState(
-    debtAssetsFilter(collateralAssets[0])
-  );
+  const [debtName, setDebtAsset] = React.useState(debtAssets[0]);
   const [debtDecimals, debtAddress] = React.useMemo(
     () => (tokens && debtName && tokens[debtName]) ?? [],
     [tokens, debtName]
@@ -112,8 +107,12 @@ export default function({ collateralAssets, debtAssetsFilter, short }) {
     }
   }, [debtAmountNumber, debtDecimals]);
 
+  const mCollateralAssets = collateralAssetsFilter(debtAssets[0]);
   const [collateralName, setCollateralAsset] = React.useState(
-    collateralAssets[0]
+    mCollateralAssets[0]
+  );
+  const [collateralAssets, setCollateralAssets] = React.useState(
+    mCollateralAssets
   );
   const collateralIsETH = collateralName === 'ETH';
   const [collateralDecimals, collateralAddress] = React.useMemo(
@@ -232,12 +231,12 @@ export default function({ collateralAssets, debtAssetsFilter, short }) {
           collateralIsETH
             ? [
                 debtAmount,
-                tokenCurrencies[debtName],
+                tokenKeysByName[debtName],
                 {
                   value: collateralAmount,
                 },
               ]
-            : [collateralAmount, debtAmount, tokenCurrencies[debtName]],
+            : [collateralAmount, debtAmount, tokenKeysByName[debtName]],
         ]
       );
     } catch {
@@ -278,8 +277,8 @@ export default function({ collateralAssets, debtAssetsFilter, short }) {
         !(
           short &&
           exchangeRatesContract &&
-          tokenCurrencies[collateralName] &&
-          tokenCurrencies[debtName] &&
+          tokenKeysByName[collateralName] &&
+          tokenKeysByName[debtName] &&
           !isZero(collateralAmount) &&
           !isZero(debtAmount)
         )
@@ -287,10 +286,10 @@ export default function({ collateralAssets, debtAssetsFilter, short }) {
         return setCRatio(ethers.BigNumber.from('0'));
       }
       const [collateralUSDPrice] = await exchangeRatesContract.rateAndInvalid(
-        tokenCurrencies[collateralName]
+        tokenKeysByName[collateralName]
       );
       const [debtUSDPrice] = await exchangeRatesContract.rateAndInvalid(
-        tokenCurrencies[debtName]
+        tokenKeysByName[debtName]
       );
       const cratio = collateralAmount
         .mul(collateralUSDPrice)
@@ -301,7 +300,7 @@ export default function({ collateralAssets, debtAssetsFilter, short }) {
     return () => (isMounted = false);
   }, [
     short,
-    tokenCurrencies,
+    tokenKeysByName,
     collateralAmount,
     collateralName,
     debtAmount,
@@ -320,7 +319,14 @@ export default function({ collateralAssets, debtAssetsFilter, short }) {
             labelId="debtNameLabel"
             id="debtName"
             value={debtName}
-            onChange={e => setDebtAsset(e.target.value)}
+            onChange={e => {
+              const debtName = e.target.value;
+              setDebtAsset(debtName);
+
+              const collateralAssets = collateralAssetsFilter(debtName);
+              setCollateralAsset(collateralAssets[0]);
+              setCollateralAssets(collateralAssets);
+            }}
           >
             {debtAssets.map(name => (
               <MenuItem value={name} key={name}>
@@ -336,9 +342,6 @@ export default function({ collateralAssets, debtAssetsFilter, short }) {
             onChange={e => {
               const collateralName = e.target.value;
               setCollateralAsset(collateralName);
-              const debtAssets = debtAssetsFilter(collateralName);
-              setDebtAsset(debtAssets[0]);
-              setDebtAssets(debtAssets);
             }}
           >
             {collateralAssets.map(name => (

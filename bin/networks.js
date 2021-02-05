@@ -59,6 +59,8 @@ async function getNetworkConfig(network) {
     ethLoanStateContractAddress,
     shortLoanStateContractAddress,
 
+    collateralManagerAddress,
+
     exchangerAddress,
     exchangeRatesAddress,
   ] = await Promise.all(
@@ -75,6 +77,8 @@ async function getNetworkConfig(network) {
       'CollateralStateEth',
       'CollateralStateShort',
 
+      'CollateralManager',
+
       'Exchanger',
       'ExchangeRates',
     ].map(request.bind(null, network))
@@ -87,17 +91,6 @@ async function getNetworkConfig(network) {
   );
   const renBTCAddress = await loanContract.underlyingContract();
 
-  // sBTCCurrency,
-  // sETHCurrency,
-  // sUSDCurrency,
-
-  const sBTCCurrency =
-    '0x7342544300000000000000000000000000000000000000000000000000000000';
-  const sETHCurrency =
-    '0x7345544800000000000000000000000000000000000000000000000000000000';
-  const sUSDCurrency =
-    '0x7355534400000000000000000000000000000000000000000000000000000000';
-
   const cfg = {
     tokens: {
       sBTC: [18, sBTCAddress],
@@ -107,12 +100,6 @@ async function getNetworkConfig(network) {
       ETH: [18, '0xee'],
     },
 
-    tokenCurrencies: {
-      sBTC: sBTCCurrency,
-      sETH: sETHCurrency,
-      sUSD: sUSDCurrency,
-    },
-
     erc20LoanContractAddress,
     ethLoanContractAddress,
     shortLoanContractAddress,
@@ -120,6 +107,8 @@ async function getNetworkConfig(network) {
     erc20LoanStateContractAddress,
     ethLoanStateContractAddress,
     shortLoanStateContractAddress,
+
+    collateralManagerAddress,
 
     exchangerAddress,
     exchangeRatesAddress,
