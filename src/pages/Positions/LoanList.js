@@ -280,7 +280,7 @@ export default function() {
           ) : !loans.length ? (
             <div className={classes.paddingWrapper}>You have no loans.</div>
           ) : (
-            <Table aria-label="Loans">
+            <Table aria-label="Loans" size={'small'}>
               <TableHead>
                 <TableRow>
                   <TableCell>ID</TableCell>
@@ -288,12 +288,8 @@ export default function() {
                   <TableCell>Type</TableCell>
                   <TableCell>Collateral</TableCell>
                   <TableCell>Debt</TableCell>
-                  <TableCell align="center">
-                    Accrued
-                    <br />
-                    Interest
-                  </TableCell>
-                  <TableCell align="center">CRatio</TableCell>
+                  <TableCell align="right">Accrued&nbsp; Interest</TableCell>
+                  <TableCell align="right">CRatio</TableCell>
                   <TableCell align="right"></TableCell>
                 </TableRow>
               </TableHead>

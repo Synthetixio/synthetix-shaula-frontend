@@ -7,8 +7,8 @@ const DEBT_ASSETS = ['sETH', 'sBTC'];
 export default function() {
   return (
     <MultiCollateral
-      collateralAssets={COLLATERAL_ASSETS}
-      debtAssetsFilter={() => DEBT_ASSETS}
+      collateralAssetsFilter={() => COLLATERAL_ASSETS}
+      debtAssets={DEBT_ASSETS}
       short
     />
   );

@@ -31,6 +31,7 @@ export const useStyles = makeStyles(theme => ({
       border: 'none',
     },
     '& h3': {
+      marginTop: 0,
       marginBottom: 3,
       textTransform: 'uppercase',
     },
@@ -202,63 +203,71 @@ export default function({ className }) {
             </Box>
           ) : (
             <Box className="flex flex-col">
-              <h3>Shorts</h3>
-              <Table aria-label="Stats" size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Asset</TableCell>
-                    <TableCell align={'right'}>Rewards APR</TableCell>
-                    <TableCell align={'right'}>Open&nbsp;Interest</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {shorts.map(stat => (
-                    <TableRow key={stat.currency}>
-                      <TableCell>{stat.currency}</TableCell>
-                      <TableCell align={'right'}>
-                        {toFixed(stat.apr, 1, 0)}%
+              <Box className="flex flex-col" mt={2}>
+                <h3>Shorts</h3>
+                <Table aria-label="Stats" size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Asset</TableCell>
+                      <TableCell align={'right'}>Rewards APR</TableCell>
+                      <TableCell align={'right'}>Open&nbsp;Interest</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {shorts.map(stat => (
+                      <TableRow key={stat.currency}>
+                        <TableCell>{stat.currency}</TableCell>
+                        <TableCell align={'right'}>
+                          {toFixed(stat.apr, 1, 0)}%
+                        </TableCell>
+                        <TableCell align={'right'}>
+                          ${toFixed(stat.openInterest, 1, 2)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+
+                    <TableRow>
+                      <TableCell colSpan={2}>
+                        <b>Total</b>
                       </TableCell>
                       <TableCell align={'right'}>
-                        ${toFixed(stat.openInterest, 1, 2)}
+                        <b>${toFixed(shortsOpenInterest, 1, 2)}</b>
                       </TableCell>
                     </TableRow>
-                  ))}
+                  </TableBody>
+                </Table>
+              </Box>
 
-                  <TableRow>
-                    <TableCell colSpan={2}>Total</TableCell>
-                    <TableCell align={'right'}>
-                      ${toFixed(shortsOpenInterest, 1, 2)}
-                    </TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
+              <Box className="flex flex-col" mt={3}>
+                <h3>Borrows</h3>
+                <Table aria-label="Stats" size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Asset</TableCell>
+                      <TableCell align={'right'}>Open&nbsp;Interest</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {borrows.map(stat => (
+                      <TableRow key={stat.currency}>
+                        <TableCell>{stat.currency}</TableCell>
+                        <TableCell align={'right'}>
+                          ${toFixed(stat.openInterest, 1, 2)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
 
-              <h3>Borrows</h3>
-              <Table aria-label="Stats" size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Asset</TableCell>
-                    <TableCell align={'right'}>Open&nbsp;Interest</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {borrows.map(stat => (
-                    <TableRow key={stat.currency}>
-                      <TableCell>{stat.currency}</TableCell>
+                    <TableRow>
+                      <TableCell>
+                        <b>Total</b>
+                      </TableCell>
                       <TableCell align={'right'}>
-                        ${toFixed(stat.openInterest, 1, 2)}
+                        <b>${toFixed(borrowsOpenInterest, 1, 2)}</b>
                       </TableCell>
                     </TableRow>
-                  ))}
-
-                  <TableRow>
-                    <TableCell>Total</TableCell>
-                    <TableCell align={'right'}>
-                      ${toFixed(borrowsOpenInterest, 1, 2)}
-                    </TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
+                  </TableBody>
+                </Table>
+              </Box>
             </Box>
           )}
         </Box>
