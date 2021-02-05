@@ -11,7 +11,8 @@ import Short from './Short';
 import Positions from './Positions';
 import PendingWithdrawals from './PendingWithdrawals';
 import Owings from './Owings';
-import Rewards from './Rewards';
+import ShortingRewards from './ShortingRewards';
+import Stats from './Stats';
 import WrongNetwork from './WrongNetwork';
 
 const MARGIN = 2;
@@ -27,6 +28,9 @@ const useStyles = makeStyles(theme => {
         padding: '70px 0 10px',
         width: 'auto',
       },
+      '& th, td': {
+        borderColor: 'rgba(255, 255, 255, 0.1)',
+      },
     },
     formGrid: {
       display: 'grid',
@@ -39,16 +43,35 @@ const useStyles = makeStyles(theme => {
         gridTemplateRows: '1fr 1fr',
       },
     },
+    withdrawals: {
+      gridArea: 'withdrawals',
+    },
+    owings: {
+      gridArea: 'owings',
+    },
+    rewards: {
+      gridArea: 'rewards',
+    },
+    stats: {
+      gridArea: 'stats',
+    },
     statsGrid: {
       display: 'grid',
       columnGap: `${margin}px`,
+      rowGap: `${margin}px`,
       gridTemplateColumns: '1fr 1fr 1fr',
-      [theme.breakpoints.down('sm')]: {
-        columnGap: 0,
-        gridTemplateColumns: 'none',
-        rowGap: `${margin}px`,
-        gridTemplateRows: '1fr 1fr 1fr',
-      },
+      gridTemplateAreas: `
+        "withdrawals  rewards stats"
+        "owings rewards stats"
+      `.trim(),
+
+      //
+      // [theme.breakpoints.down('sm')]: {
+      //   columnGap: 0,
+      //   gridTemplateColumns: 'none',
+      //   rowGap: `${margin}px`,
+      //   gridTemplateRows: '1fr 1fr 1fr',
+      // },
     },
   };
 });
@@ -70,13 +93,14 @@ export default function App() {
             <Borrow />
             <Short />
           </Box>
-          <Box mb={MARGIN} className={clsx(classes.statsGrid)}>
-            <PendingWithdrawals />
-            <Owings />
-            <Rewards />
-          </Box>
           <Box mb={MARGIN}>
             <Positions />
+          </Box>
+          <Box mb={MARGIN} className={clsx(classes.statsGrid)}>
+            <PendingWithdrawals className={classes.withdrawals} />
+            <Owings className={classes.owings} />
+            <ShortingRewards className={classes.rewards} />
+            <Stats className={classes.stats} />
           </Box>
           <WrongNetwork />
         </>

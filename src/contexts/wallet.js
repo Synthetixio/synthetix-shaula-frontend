@@ -9,6 +9,7 @@ import {
   INFURA_ID,
 } from 'config';
 import cache from 'utils/cache';
+import { bytesFormatter } from 'utils/snx';
 import NETWORKS_V1 from 'networks/v1.json';
 import NETWORKS_V2 from 'networks/v2.json';
 import LOAN_STATE_ABI from 'abis/loan-state.json';
@@ -52,15 +53,16 @@ export function WalletProvider({ children }) {
     const cfg = NETWORKS[version][network];
     if (!cfg) return {};
 
-    const tokenCurrenciesByAddress = Object.entries(cfg.tokenCurrencies).reduce(
-      (r, [k, v]) => {
-        r[v] = k;
-        return r;
-      },
-      {}
-    );
+    const tokenKeysByName = {};
+    const tokenKeysByKey = {};
 
-    return { ...cfg, tokenCurrenciesByAddress };
+    ['sBTC', 'sETH', 'sUSD', 'SNX'].forEach(currency => {
+      const key = bytesFormatter(currency);
+      tokenKeysByName[currency] = key;
+      tokenKeysByKey[key] = currency;
+    });
+
+    return { ...cfg, tokenKeysByName, tokenKeysByKey };
   }, [network, version]);
 
   const erc20LoanStateContract = React.useMemo(

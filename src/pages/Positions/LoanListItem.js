@@ -28,13 +28,13 @@ export default function({ loan, onActOnLoan }) {
   const classes = useStyles();
 
   const {
-    config: { tokenCurrenciesByAddress },
+    config: { tokenKeysByKey },
   } = useWallet();
 
-  const targetName = React.useMemo(
-    () => tokenCurrenciesByAddress[loan.currency],
-    [tokenCurrenciesByAddress, loan]
-  );
+  const targetName = React.useMemo(() => tokenKeysByKey[loan.currency], [
+    tokenKeysByKey,
+    loan,
+  ]);
   const collateralName = React.useMemo(
     () =>
       ({

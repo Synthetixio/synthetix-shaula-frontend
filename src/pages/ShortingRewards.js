@@ -1,11 +1,19 @@
 import React from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import { Paper, Button, Box } from '@material-ui/core';
+import {
+  Paper,
+  Button,
+  Box,
+  Table,
+  TableBody,
+  TableCell,
+  TableRow,
+} from '@material-ui/core';
 import clsx from 'clsx';
 import * as ethers from 'ethers';
 import { useWallet } from 'contexts/wallet';
 import Loader from 'components/Loader';
-import { formatUnits, toFixed } from 'utils/big-number';
+import { formatUnits } from 'utils/big-number';
 import { useNotifications } from 'contexts/notifications';
 import REWARDS_CONTRACT_ABI from 'abis/shorting-rewards.json';
 
@@ -17,6 +25,13 @@ export const useStyles = makeStyles(theme => ({
     flex: 1,
     [theme.breakpoints.down('sm')]: {
       margin: 10,
+    },
+    '& table': {
+      width: 'auto',
+      marginLeft: -16,
+    },
+    '& td, th': {
+      border: 'none',
     },
   },
   content: {
@@ -40,16 +55,17 @@ export const useStyles = makeStyles(theme => ({
   },
 }));
 
-export default function() {
+export default function({ className }) {
   const classes = useStyles();
 
   const {
     signer,
     address,
     version,
-    config: { tokenCurrencies },
+    config: { tokenKeysByName },
     shortLoanContract,
     collateralManagerContract,
+    exchangeRatesContract,
   } = useWallet();
 
   const [isLoading, setIsLoading] = React.useState(false);
@@ -65,12 +81,12 @@ export default function() {
         }
         return;
       }
-      if (!(signer && shortLoanContract && tokenCurrencies)) {
+      if (!(signer && shortLoanContract && tokenKeysByName)) {
         return setIsLoading(true);
       }
 
       const getRewardContract = async currency => {
-        const currencyAddress = tokenCurrencies[currency];
+        const currencyAddress = tokenKeysByName[currency];
         const rewardAddress = await shortLoanContract.shortingRewards(
           currencyAddress
         );
@@ -93,7 +109,7 @@ export default function() {
       }
     })();
     return () => (isMounted = false);
-  }, [shortLoanContract, tokenCurrencies, signer, version]);
+  }, [shortLoanContract, tokenKeysByName, signer, version]);
 
   React.useEffect(() => {
     if (version === 1) {
@@ -107,7 +123,8 @@ export default function() {
         address &&
         signer &&
         collateralManagerContract &&
-        tokenCurrencies
+        exchangeRatesContract &&
+        tokenKeysByName
       )
     ) {
       return setIsLoading(true);
@@ -122,25 +139,20 @@ export default function() {
         currency,
         ...rest
       }) => {
-        const [totalPositionsValue, claimAmount] = await Promise.all([
-          collateralManagerContract.short(tokenCurrencies[currency]),
+        // console.trace();
+        const [claimAmount] = await Promise.all([
           rewardsContract.earned(address),
         ]);
-        console.trace();
+
         return {
           ...rest,
           rewardsContract,
           currency,
           claimAmount,
-          apy: totalPositionsValue.isZero()
-            ? ethers.BigNumber.from('0')
-            : claimAmount.mul(52 * 100).div(totalPositionsValue),
         };
       };
       try {
-        const rewards = (
-          await Promise.all(rewardsContracts.map(getRewards))
-        ).filter(r => !r.claimAmount.isZero());
+        const rewards = await Promise.all(rewardsContracts.map(getRewards));
         if (isMounted) {
           setRewards(rewards);
         }
@@ -179,41 +191,42 @@ export default function() {
     version,
     signer,
     collateralManagerContract,
-    tokenCurrencies,
+    tokenKeysByName,
+    exchangeRatesContract,
   ]);
 
   return !signer ? null : (
-    <Paper className={classes.container}>
-      <div className={classes.content}>
-        <div className={classes.heading}>Shorting Rewards</div>
-        <div className={classes.p}>
+    <Paper className={clsx(classes.container, className)}>
+      <Box className={classes.content}>
+        <Box className={classes.heading}>Shorting Rewards</Box>
+        <Box className={classes.p}>
           {isLoading ? (
-            <div className={clsx(classes.paddingWrapper, 'justify-center')}>
+            <Box className={clsx(classes.paddingWrapper, 'justify-center')}>
               <Loader />
-            </div>
-          ) : !rewards.length ? (
-            <div className={classes.paddingWrapper}>You have no rewards.</div>
+            </Box>
           ) : (
-            <div className="flex flex-col">
-              {rewards.map(reward => (
-                <Reward key={reward.currency} {...reward} />
-              ))}
-            </div>
+            <Table aria-label="Rewards" size="small">
+              <TableBody>
+                {rewards.map(reward => (
+                  <Reward key={reward.currency} {...reward} />
+                ))}
+              </TableBody>
+            </Table>
           )}
-        </div>
-      </div>
+        </Box>
+      </Box>
     </Paper>
   );
 }
 
-function Reward({ currency, claimAmount, apy }) {
+function Reward({ currency, claimAmount }) {
   // const classes = useStyles();
   const { tx } = useNotifications();
 
   const {
     address,
     shortLoanContract,
-    config: { tokenCurrencies },
+    config: { tokenKeysByName },
   } = useWallet();
   const [isClaiming, setIsClaiming] = React.useState(false);
 
@@ -226,7 +239,7 @@ function Reward({ currency, claimAmount, apy }) {
         () => [
           shortLoanContract,
           'getReward',
-          [tokenCurrencies[currency], address],
+          [tokenKeysByName[currency], address],
         ]
       );
     } catch {
@@ -236,23 +249,21 @@ function Reward({ currency, claimAmount, apy }) {
   };
 
   return (
-    <Box mb={1} className="flex items-center">
-      <Box mr={1} className="flex items-center">
-        {formatUnits(claimAmount, 18, 4)} SNX (
-        <small>
-          {currency}, apy: {toFixed(apy, 1, 0)}%
-        </small>
-        )
-      </Box>
-      <Button
-        color="secondary"
-        variant="outlined"
-        size="small"
-        onClick={claim}
-        disabled={isClaiming}
-      >
-        {isClaiming ? 'CLAIMING...' : 'CLAIM'}
-      </Button>
-    </Box>
+    <TableRow>
+      <TableCell>{currency}</TableCell>
+      <TableCell>
+        {claimAmount.isZero() ? '-' : `${formatUnits(claimAmount, 18, 4)} SNX`}
+      </TableCell>
+      <TableCell>
+        <Button
+          color="secondary"
+          size="small"
+          onClick={claim}
+          disabled={isClaiming || claimAmount.isZero()}
+        >
+          {isClaiming ? 'CLAIMING...' : 'CLAIM'}
+        </Button>
+      </TableCell>
+    </TableRow>
   );
 }

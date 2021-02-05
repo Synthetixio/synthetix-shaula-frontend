@@ -75,7 +75,7 @@ export default function({ collateralAssets, debtAssetsFilter, short }) {
     connect,
     config: {
       tokens,
-      tokenCurrencies,
+      tokenKeysByName,
       erc20LoanContractAddress,
       ethLoanContractAddress,
       shortLoanContractAddress,
@@ -232,12 +232,12 @@ export default function({ collateralAssets, debtAssetsFilter, short }) {
           collateralIsETH
             ? [
                 debtAmount,
-                tokenCurrencies[debtName],
+                tokenKeysByName[debtName],
                 {
                   value: collateralAmount,
                 },
               ]
-            : [collateralAmount, debtAmount, tokenCurrencies[debtName]],
+            : [collateralAmount, debtAmount, tokenKeysByName[debtName]],
         ]
       );
     } catch {
@@ -278,8 +278,8 @@ export default function({ collateralAssets, debtAssetsFilter, short }) {
         !(
           short &&
           exchangeRatesContract &&
-          tokenCurrencies[collateralName] &&
-          tokenCurrencies[debtName] &&
+          tokenKeysByName[collateralName] &&
+          tokenKeysByName[debtName] &&
           !isZero(collateralAmount) &&
           !isZero(debtAmount)
         )
@@ -287,10 +287,10 @@ export default function({ collateralAssets, debtAssetsFilter, short }) {
         return setCRatio(ethers.BigNumber.from('0'));
       }
       const [collateralUSDPrice] = await exchangeRatesContract.rateAndInvalid(
-        tokenCurrencies[collateralName]
+        tokenKeysByName[collateralName]
       );
       const [debtUSDPrice] = await exchangeRatesContract.rateAndInvalid(
-        tokenCurrencies[debtName]
+        tokenKeysByName[debtName]
       );
       const cratio = collateralAmount
         .mul(collateralUSDPrice)
@@ -301,7 +301,7 @@ export default function({ collateralAssets, debtAssetsFilter, short }) {
     return () => (isMounted = false);
   }, [
     short,
-    tokenCurrencies,
+    tokenKeysByName,
     collateralAmount,
     collateralName,
     debtAmount,
