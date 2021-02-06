@@ -46,7 +46,6 @@ export default function({ className }) {
   const classes = useStyles();
 
   const {
-    signer,
     address,
     config: { tokenKeysByName },
     exchangerContract,
@@ -79,9 +78,7 @@ export default function({ className }) {
   };
 
   React.useEffect(() => {
-    if (!(exchangerContract && tokenKeysByName && address)) {
-      return setIsLoading(true);
-    }
+    if (!(exchangerContract && tokenKeysByName && address)) return;
 
     let isMounted = true;
     const unsubs = [() => (isMounted = false)];
@@ -103,6 +100,7 @@ export default function({ className }) {
     //   unsubs.push(() => exchangerContract.off(settleEvent, load));
     // };
 
+    setIsLoading(true);
     load();
     // subscribe();
     return () => {
@@ -110,7 +108,7 @@ export default function({ className }) {
     };
   }, [exchangerContract, tokenKeysByName, address]);
 
-  return !signer ? null : (
+  return (
     <Paper className={clsx(classes.container, className)}>
       <div className={classes.content}>
         <div className={classes.heading}>Owings</div>
@@ -119,6 +117,8 @@ export default function({ className }) {
             <div className={clsx(classes.paddingWrapper, 'justify-center')}>
               <Loader />
             </div>
+          ) : !address ? (
+            '-'
           ) : !owings.length ? (
             <div className={classes.paddingWrapper}>
               You have no owings to settle.

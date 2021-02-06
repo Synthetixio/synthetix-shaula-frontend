@@ -61,8 +61,7 @@ export default function({ className }) {
   const classes = useStyles();
 
   const {
-    signer,
-    address,
+    signerOrProvider,
     version,
     config: { tokenKeysByName },
     collateralManagerContract,
@@ -90,8 +89,7 @@ export default function({ className }) {
     }
     if (
       !(
-        address &&
-        signer &&
+        signerOrProvider &&
         collateralManagerContract &&
         exchangeRatesContract &&
         tokenKeysByName
@@ -174,8 +172,8 @@ export default function({ className }) {
 
     const subscribe = () => {
       const newBlockEvent = 'block';
-      signer.provider.on(newBlockEvent, load);
-      unsubs.push(() => signer.provider.off(newBlockEvent, load));
+      signerOrProvider.on(newBlockEvent, load);
+      unsubs.push(() => signerOrProvider.off(newBlockEvent, load));
     };
 
     load();
@@ -184,15 +182,14 @@ export default function({ className }) {
       unsubs.forEach(unsub => unsub());
     };
   }, [
-    address,
     version,
-    signer,
+    signerOrProvider,
     collateralManagerContract,
     tokenKeysByName,
     exchangeRatesContract,
   ]);
 
-  return !signer ? null : (
+  return (
     <Paper className={clsx(classes.container, className)}>
       <Box className={classes.content}>
         <Box className={classes.heading}>Statistics</Box>

@@ -21,7 +21,10 @@ import EXCHANGE_RATES_ABI from 'abis/exchange-rates.json';
 import COLLATERAL_MANAGER_ABI from 'abis/collateral-manager.json';
 
 const DEFAULT_NETWORK_ID = 1;
-
+const READ_PROVIDER = new ethers.providers.InfuraProvider(
+  'homestead',
+  INFURA_ID
+);
 const WALLETS = [
   { walletName: 'metamask', preferred: true },
   {
@@ -145,25 +148,32 @@ export function WalletProvider({ children }) {
     [signer, cfg.exchangerAddress]
   );
 
-  const exchangeRatesContract = React.useMemo(
-    () =>
-      signer &&
-      cfg.exchangeRatesAddress &&
-      new ethers.Contract(cfg.exchangeRatesAddress, EXCHANGE_RATES_ABI, signer),
-    [signer, cfg.exchangeRatesAddress]
+  const provider = React.useMemo(() => isLoaded && (signer || READ_PROVIDER), [
+    isLoaded,
+    signer,
+  ]);
+  const signerOrProvider = React.useMemo(
+    () => isLoaded && (signer?.provider || READ_PROVIDER),
+    [isLoaded, signer]
   );
 
-  const collateralManagerContract = React.useMemo(
-    () =>
-      signer &&
-      cfg.collateralManagerAddress &&
-      new ethers.Contract(
-        cfg.collateralManagerAddress,
-        COLLATERAL_MANAGER_ABI,
-        signer
-      ),
-    [signer, cfg.collateralManagerAddress]
-  );
+  const exchangeRatesContract = React.useMemo(() => {
+    if (!(isLoaded && cfg.exchangeRatesAddress)) return;
+    return new ethers.Contract(
+      cfg.exchangeRatesAddress,
+      EXCHANGE_RATES_ABI,
+      signerOrProvider
+    );
+  }, [isLoaded, signerOrProvider, cfg.exchangeRatesAddress]);
+
+  const collateralManagerContract = React.useMemo(() => {
+    if (!(isLoaded && cfg.collateralManagerAddress)) return;
+    return new ethers.Contract(
+      cfg.collateralManagerAddress,
+      COLLATERAL_MANAGER_ABI,
+      signerOrProvider
+    );
+  }, [isLoaded, signerOrProvider, cfg.collateralManagerAddress]);
 
   const connect = React.useCallback(
     async tryCached => {
@@ -172,7 +182,7 @@ export function WalletProvider({ children }) {
       let cachedWallet;
       if (tryCached) {
         cachedWallet = cache(CACHE_WALLET_KEY);
-        if (!cachedWallet) return;
+        if (!cachedWallet) return setNetwork('mainnet');
       }
 
       if (!onboard) {
@@ -256,6 +266,8 @@ export function WalletProvider({ children }) {
         config: cfg,
         network,
         signer,
+        provider,
+        signerOrProvider,
         version,
         setVersion,
 
@@ -293,6 +305,8 @@ export function useWallet() {
     config,
     network,
     signer,
+    provider,
+    signerOrProvider,
     version,
     setVersion,
 
@@ -320,6 +334,8 @@ export function useWallet() {
     config,
     network,
     signer,
+    provider,
+    signerOrProvider,
     version,
     setVersion,
     availableNetworkNames: Object.keys(NETWORKS[version]),

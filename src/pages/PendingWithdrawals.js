@@ -44,7 +44,7 @@ export default function({ className }) {
   const classes = useStyles();
   const { tx } = useNotifications();
 
-  const { signer, address, ethLoanContract } = useWallet();
+  const { address, ethLoanContract } = useWallet();
 
   const [isLoading, setIsLoading] = React.useState(false);
   const [isClaiming, setIsClaiming] = React.useState(false);
@@ -99,7 +99,6 @@ export default function({ className }) {
     (async () => {
       if (!(ethLoanContract && address)) return;
       setIsLoading(true);
-
       loadPendingWithdrawals({
         ethLoanContract,
         isMounted,
@@ -111,7 +110,7 @@ export default function({ className }) {
     return () => (isMounted = false);
   }, [ethLoanContract, address]);
 
-  return !signer ? null : (
+  return (
     <Paper className={clsx(classes.container, className)}>
       <div className={classes.content}>
         <div className={classes.heading}>Pending Withdrawals</div>
@@ -120,6 +119,8 @@ export default function({ className }) {
             <div className={clsx(classes.paddingWrapper, 'justify-center')}>
               <Loader />
             </div>
+          ) : !address ? (
+            '-'
           ) : pendingWithdrawals.isZero() ? (
             <div className={classes.paddingWrapper}>
               You have no pending withdrawals.

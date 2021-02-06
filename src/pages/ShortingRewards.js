@@ -82,7 +82,7 @@ export default function({ className }) {
         return;
       }
       if (!(signer && shortLoanContract && tokenKeysByName)) {
-        return setIsLoading(true);
+        return;
       }
 
       const getRewardContract = async currency => {
@@ -127,7 +127,7 @@ export default function({ className }) {
         tokenKeysByName
       )
     ) {
-      return setIsLoading(true);
+      return;
     }
 
     let isMounted = true;
@@ -180,6 +180,7 @@ export default function({ className }) {
       unsubs.push(() => signer.provider.off(newBlockEvent, load));
     };
 
+    setIsLoading(true);
     load();
     subscribe();
     return () => {
@@ -195,7 +196,7 @@ export default function({ className }) {
     exchangeRatesContract,
   ]);
 
-  return !signer ? null : (
+  return (
     <Paper className={clsx(classes.container, className)}>
       <Box className={classes.content}>
         <Box className={classes.heading}>Shorting Rewards</Box>
@@ -204,6 +205,8 @@ export default function({ className }) {
             <Box className={clsx(classes.paddingWrapper, 'justify-center')}>
               <Loader />
             </Box>
+          ) : !address ? (
+            '-'
           ) : (
             <Table aria-label="Rewards" size="small">
               <TableBody>
