@@ -1,5 +1,6 @@
 import React from 'react';
 import { ethers } from 'ethers';
+import fetch from 'unfetch';
 import Onboard from 'bnc-onboard';
 import {
   CACHE_WALLET_KEY,
@@ -235,6 +236,18 @@ export function WalletProvider({ children }) {
     setSigner(null);
   }
 
+  const subgraph = React.useCallback(
+    async (query, variables) => {
+      const res = await fetch(cfg.subgraphUrl, {
+        method: 'POST',
+        body: JSON.stringify({ query, variables }),
+      });
+      const { data } = await res.json();
+      return data;
+    },
+    [cfg.subgraphUrl]
+  );
+
   React.useEffect(() => {
     if (!signer) return;
     let isMounted = true;
@@ -270,6 +283,7 @@ export function WalletProvider({ children }) {
         signerOrProvider,
         version,
         setVersion,
+        subgraph,
 
         erc20LoanContract,
         ethLoanContract,
@@ -309,6 +323,7 @@ export function useWallet() {
     signerOrProvider,
     version,
     setVersion,
+    subgraph,
 
     erc20LoanContract,
     ethLoanContract,
@@ -339,6 +354,7 @@ export function useWallet() {
     version,
     setVersion,
     availableNetworkNames: Object.keys(NETWORKS[version]),
+    subgraph,
 
     erc20LoanContract,
     ethLoanContract,

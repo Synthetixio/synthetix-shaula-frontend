@@ -112,6 +112,8 @@ async function getNetworkConfig(network) {
 
     exchangerAddress,
     exchangeRatesAddress,
+
+    subgraphUrl: 'https://api.thegraph.com/subgraphs/name/dvd-schwrtz/test',
   };
 
   return cfg;

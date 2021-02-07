@@ -5,7 +5,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import { TableCell, TableRow, Tooltip } from '@material-ui/core';
 import { Help as TipIcon } from '@material-ui/icons';
 import { useWallet } from 'contexts/wallet';
-import { formatUnits } from 'utils/big-number';
+import { formatUnits, toFixed } from 'utils/big-number';
 import {
   LOAN_TYPE_ERC20,
   LOAN_TYPE_ETH,
@@ -63,6 +63,7 @@ export default function({ loan, onActOnLoan }) {
       <TableCell>
         {formatUnits(loan.amount, 18)} {targetName}
       </TableCell>
+      <TableCell align="right">{toFixed(loan.pnl, 1, 2)} sUSD</TableCell>
       <TableCell align="right">
         {formatUnits(loan.accruedInterest, 18)}
       </TableCell>

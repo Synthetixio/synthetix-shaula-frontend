@@ -30,7 +30,8 @@
     "shortLoanStateContractAddress": "0x13A114a3Fa8A6CE03a0C5488BE9e614d78eDdb0c",
     "collateralManagerAddress": "0x067e398605E84F2D0aEEC1806e62768C5110DCc6",
     "exchangerAddress": "0x0bfDc04B38251394542586969E2356d0D731f7DE",
-    "exchangeRatesAddress": "0xd69b189020EF614796578AfE4d10378c5e7e1138"
+    "exchangeRatesAddress": "0xd69b189020EF614796578AfE4d10378c5e7e1138",
+    "subgraphUrl": "https://api.thegraph.com/subgraphs/name/dvd-schwrtz/test"
   },
   "kovan": {
     "tokens": {
@@ -63,7 +64,8 @@
     "shortLoanStateContractAddress": "0xd74E3A605A1a7A8a83D25DF00D4057985E3CAC30",
     "collateralManagerAddress": "0x53baE964339e8A742B5b47F6C10bbfa8Ff138F34",
     "exchangerAddress": "0xF49528689234d46724383669BD8658bfB47f8575",
-    "exchangeRatesAddress": "0xC9985cAc4a69588Da66F74E42845B784798fe5aB"
+    "exchangeRatesAddress": "0xC9985cAc4a69588Da66F74E42845B784798fe5aB",
+    "subgraphUrl": "https://api.thegraph.com/subgraphs/name/dvd-schwrtz/test"
   },
   "rinkeby": {
     "tokens": {
@@ -96,6 +98,7 @@
     "shortLoanStateContractAddress": "0xFAdbaf925eC35D97ae3EB87b458d005Dfd4C4b52",
     "collateralManagerAddress": "0xFC4B21B7CC5DCC62aE4ae229Ee96Af1DB1678F35",
     "exchangerAddress": "0x0260F7587a73815E3747Ce3D31FAF1383E1B653a",
-    "exchangeRatesAddress": "0x8a8DeBDF5Ca68d381dE99244AAEa8b906Daf78A7"
+    "exchangeRatesAddress": "0x8a8DeBDF5Ca68d381dE99244AAEa8b906Daf78A7",
+    "subgraphUrl": "https://api.thegraph.com/subgraphs/name/dvd-schwrtz/test"
   }
 }

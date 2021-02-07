@@ -9,6 +9,7 @@ import {
   TableRow,
 } from '@material-ui/core';
 import { useWallet } from 'contexts/wallet';
+import { Big } from 'utils/big-number';
 import Loader from 'components/Loader';
 import Loan from './LoanListItem';
 import LoanActionsModal from './LoanActions/LoanActionsModal';
@@ -56,6 +57,8 @@ export default function() {
     shortLoanStateContract,
     loanContracts,
     loanStateContracts,
+    exchangeRatesContract,
+    subgraph,
   } = useWallet();
 
   const [isLoading, setIsLoading] = React.useState(false);
@@ -63,8 +66,20 @@ export default function() {
   const [loanBeingActedOn, setLoanBeingActedOn] = React.useState(null);
 
   React.useEffect(() => {
+    if (
+      !(
+        erc20LoanStateContract &&
+        ethLoanStateContract &&
+        shortLoanStateContract &&
+        address &&
+        exchangeRatesContract &&
+        subgraph
+      )
+    )
+      return;
+
     let isMounted = true;
-    const unsubs = [];
+    const unsubs = [() => (isMounted = false)];
 
     const getLoanIndices = async type => {
       const [n, minCRatio] = await Promise.all([
@@ -91,45 +106,73 @@ export default function() {
     };
 
     const makeLoan = async ({ loan, type, minCRatio }) => {
+      const {
+        shorts: [{ txHash }],
+      } = await subgraph(
+        `query ($id: String!) {
+          shorts(where: {id: $id}) {
+            txHash
+          }
+        }`,
+        {
+          id: loan.id.toString(),
+        }
+      );
+      console.log({ txHash });
+      const {
+        blockNumber: creationBlockNumber,
+      } = await signer.provider.getTransaction(txHash);
+      console.log({ creationBlockNumber });
+      // const interest = loan.amount.add(loan.accruedInterest).mul(debtUSDPrice);
+      let [initialUSDPrice, latestUSDPrice] = await Promise.all([
+        exchangeRatesContract.rateForCurrency(loan.currency, {
+          blockTag: creationBlockNumber,
+        }),
+        exchangeRatesContract.rateForCurrency(loan.currency),
+      ]);
+      const loanAmount = Big(loan.amount).div(1e18);
+      initialUSDPrice = Big(initialUSDPrice).div(1e18);
+      latestUSDPrice = Big(latestUSDPrice).div(1e18);
+      console.log({
+        initialUSDPrice: initialUSDPrice.toString(),
+        latestUSDPrice: latestUSDPrice.toString(),
+      });
+      const pnl = latestUSDPrice
+        .sub(initialUSDPrice)
+        .div(latestUSDPrice)
+        .mul(loanAmount)
+        .mul(initialUSDPrice);
+      console.log({ pnl: pnl.toString() });
       return {
         ...loan,
         type,
         minCRatio,
         cratio: await loanContracts[type].collateralRatio(loan),
+        pnl,
       };
     };
 
     const loadLoans = async () => {
-      if (
-        !(
-          erc20LoanStateContract &&
-          ethLoanStateContract &&
-          shortLoanStateContract &&
-          address
-        )
-      )
-        return;
       setIsLoading(true);
 
       const loanIndices = await Promise.all(
         Object.keys(loanStateContracts).map(getLoanIndices)
       );
       const loans = await Promise.all(loanIndices.map(getLoans));
-      const activeLoans = [];
+      let activeLoans = [];
       for (let i = 0; i < loans.length; i++) {
         for (let j = 0; j < loans[i].length; j++) {
           const { type, minCRatio, loan } = loans[i][j];
           if (!loan.amount.isZero()) {
-            activeLoans.push(
-              await makeLoan({
-                loan,
-                type,
-                minCRatio,
-              })
-            );
+            activeLoans.push({
+              loan,
+              type,
+              minCRatio,
+            });
           }
         }
       }
+      activeLoans = await Promise.all(activeLoans.map(makeLoan));
       activeLoans.sort((a, b) => {
         if (a.id.gt(b.id)) return -1;
         if (a.id.lt(b.id)) return 1;
@@ -143,15 +186,6 @@ export default function() {
 
     // subscribe to loan open+close
     const subscribe = () => {
-      if (
-        !(
-          erc20LoanStateContract &&
-          ethLoanStateContract &&
-          shortLoanStateContract &&
-          address
-        )
-      )
-        return () => {};
       for (const type in loanContracts) {
         const contract = loanContracts[type];
 
@@ -252,7 +286,6 @@ export default function() {
     loadLoans();
     subscribe();
     return () => {
-      isMounted = false;
       unsubs.forEach(unsub => unsub());
     };
   }, [
@@ -262,6 +295,9 @@ export default function() {
     address,
     loanContracts,
     loanStateContracts,
+    exchangeRatesContract,
+    subgraph,
+    signer,
   ]);
 
   const startActOnLoan = args => setLoanBeingActedOn(args);
@@ -288,6 +324,7 @@ export default function() {
                   <TableCell>Type</TableCell>
                   <TableCell>Collateral</TableCell>
                   <TableCell>Debt</TableCell>
+                  <TableCell align="right">PNL</TableCell>
                   <TableCell align="right">Accrued&nbsp; Interest</TableCell>
                   <TableCell align="right">CRatio</TableCell>
                   <TableCell align="right"></TableCell>
