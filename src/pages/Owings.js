@@ -141,18 +141,23 @@ function Owing({ loadOwings, reclaimAmount, currency }) {
   const {
     address,
     exchangerContract,
-    config: { tokenKeysByKey },
+    config: { tokenKeysByName },
   } = useWallet();
 
   const [isSettling, setIsSettling] = React.useState(false);
 
   const settle = async () => {
+    console.log(tokenKeysByName[currency]);
     try {
       setIsSettling(true);
       await tx(
         `Settling ${currency} owed.`,
         `You have successfully settled ${currency} owed.`,
-        () => [exchangerContract, 'settle', [address, currency]]
+        () => [
+          exchangerContract,
+          'settle',
+          [address, tokenKeysByName[currency]],
+        ]
       );
       await sleep(1000);
       await loadOwings();
@@ -164,7 +169,7 @@ function Owing({ loadOwings, reclaimAmount, currency }) {
 
   return (
     <div>
-      {formatUnits(reclaimAmount, 18)} {tokenKeysByKey[currency]}{' '}
+      {formatUnits(reclaimAmount, 18)} {currency}{' '}
       <Button
         color="secondary"
         variant="outlined"
