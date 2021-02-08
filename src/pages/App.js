@@ -64,7 +64,6 @@ const useStyles = makeStyles(theme => {
         "withdrawals  rewards stats"
         "owings rewards stats"
       `.trim(),
-
       //
       // [theme.breakpoints.down('sm')]: {
       //   columnGap: 0,

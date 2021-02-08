@@ -236,17 +236,22 @@ export function WalletProvider({ children }) {
     setSigner(null);
   }
 
-  const subgraph = React.useCallback(
-    async (query, variables) => {
-      const res = await fetch(cfg.subgraphUrl, {
-        method: 'POST',
-        body: JSON.stringify({ query, variables }),
-      });
-      const { data } = await res.json();
-      return data;
-    },
-    [cfg.subgraphUrl]
-  );
+  const subgraph = subgraphUrl => async (query, variables) => {
+    const res = await fetch(subgraphUrl, {
+      method: 'POST',
+      body: JSON.stringify({ query, variables }),
+    });
+    const { data } = await res.json();
+    return data;
+  };
+
+  const longsSubgraph = React.useCallback(subgraph(cfg.longsSubgraphUrl), [
+    cfg.longsSubgraphUrl,
+  ]);
+
+  const shortsSubgraph = React.useCallback(subgraph(cfg.shortsSubgraphUrl), [
+    cfg.shortsSubgraphUrl,
+  ]);
 
   React.useEffect(() => {
     if (!signer) return;
@@ -283,7 +288,8 @@ export function WalletProvider({ children }) {
         signerOrProvider,
         version,
         setVersion,
-        subgraph,
+        longsSubgraph,
+        shortsSubgraph,
 
         erc20LoanContract,
         ethLoanContract,
@@ -323,7 +329,8 @@ export function useWallet() {
     signerOrProvider,
     version,
     setVersion,
-    subgraph,
+    longsSubgraph,
+    shortsSubgraph,
 
     erc20LoanContract,
     ethLoanContract,
@@ -354,7 +361,8 @@ export function useWallet() {
     version,
     setVersion,
     availableNetworkNames: Object.keys(NETWORKS[version]),
-    subgraph,
+    longsSubgraph,
+    shortsSubgraph,
 
     erc20LoanContract,
     ethLoanContract,

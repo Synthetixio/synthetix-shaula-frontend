@@ -58,8 +58,8 @@ export default function() {
     loanContracts,
     loanStateContracts,
     exchangeRatesContract,
-    subgraph,
-    network,
+    longsSubgraph,
+    shortsSubgraph,
   } = useWallet();
 
   const [isLoading, setIsLoading] = React.useState(false);
@@ -74,7 +74,8 @@ export default function() {
         shortLoanStateContract &&
         address &&
         exchangeRatesContract &&
-        subgraph
+        longsSubgraph &&
+        shortsSubgraph
       )
     )
       return;
@@ -108,18 +109,21 @@ export default function() {
 
     const makeLoan = async ({ loan, type, minCRatio }) => {
       let pnl, pnlPercentage;
-      if (network === 'mainnet' && type === 'short') {
+      if (type === 'short') {
+        const short = type === 'short';
+        const variables = {
+          id: loan.id.toString(),
+        };
+        const subgraph = short ? shortsSubgraph : longsSubgraph;
         const {
           shorts: [{ txHash }],
         } = await subgraph(
           `query ($id: String!) {
-          shorts(where: {id: $id}) {
-            txHash
-          }
-        }`,
-          {
-            id: loan.id.toString(),
-          }
+              ${short ? 'shorts' : 'loans'}(where: {id: $id}) {
+                txHash
+              }
+            }`,
+          variables
         );
         console.log({ txHash });
         const {
@@ -140,7 +144,15 @@ export default function() {
           initialUSDPrice: initialUSDPrice.toString(),
           latestUSDPrice: latestUSDPrice.toString(),
         });
-        pnlPercentage = latestUSDPrice.sub(initialUSDPrice).div(latestUSDPrice);
+        if (short) {
+          pnlPercentage = initialUSDPrice
+            .sub(latestUSDPrice)
+            .div(initialUSDPrice);
+        } else {
+          pnlPercentage = latestUSDPrice
+            .sub(initialUSDPrice)
+            .div(latestUSDPrice);
+        }
         pnl = pnlPercentage.mul(loanAmount).mul(initialUSDPrice);
         pnlPercentage = pnlPercentage.mul(1e2);
         console.log({
@@ -302,9 +314,9 @@ export default function() {
     loanContracts,
     loanStateContracts,
     exchangeRatesContract,
-    subgraph,
+    longsSubgraph,
+    shortsSubgraph,
     signer,
-    network,
   ]);
 
   const startActOnLoan = args => setLoanBeingActedOn(args);

@@ -11,7 +11,7 @@ const VERSION = 'v2';
 const NETWORKS = [
   'mainnet',
   'kovan',
-  'rinkeby',
+  // 'rinkeby',
   // 'ropsten',
 ];
 
@@ -113,7 +113,15 @@ async function getNetworkConfig(network) {
     exchangerAddress,
     exchangeRatesAddress,
 
-    subgraphUrl: 'https://api.thegraph.com/subgraphs/name/dvd-schwrtz/test',
+    shortsSubgraphUrl:
+      network === 'kovan'
+        ? 'https://api.thegraph.com/subgraphs/name/vbstreetz/synthetix-shorts'
+        : 'https://api.thegraph.com/subgraphs/name/dvd-schwrtz/test',
+
+    longsSubgraphUrl:
+      network === 'kovan'
+        ? 'https://api.thegraph.com/subgraphs/name/vbstreetz/synthetix-loans-kovan'
+        : 'https://api.thegraph.com/subgraphs/name/synthetixio-team/synthetix-loans',
   };
 
   return cfg;
