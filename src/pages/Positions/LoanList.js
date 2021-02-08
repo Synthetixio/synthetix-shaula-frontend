@@ -59,6 +59,7 @@ export default function() {
     loanStateContracts,
     exchangeRatesContract,
     subgraph,
+    network,
   } = useWallet();
 
   const [isLoading, setIsLoading] = React.useState(false);
@@ -106,49 +107,54 @@ export default function() {
     };
 
     const makeLoan = async ({ loan, type, minCRatio }) => {
-      const {
-        shorts: [{ txHash }],
-      } = await subgraph(
-        `query ($id: String!) {
+      let pnl, pnlPercentage;
+      if (network === 'mainnet' && type === 'short') {
+        const {
+          shorts: [{ txHash }],
+        } = await subgraph(
+          `query ($id: String!) {
           shorts(where: {id: $id}) {
             txHash
           }
         }`,
-        {
-          id: loan.id.toString(),
-        }
-      );
-      console.log({ txHash });
-      const {
-        blockNumber: creationBlockNumber,
-      } = await signer.provider.getTransaction(txHash);
-      console.log({ creationBlockNumber });
-      // const interest = loan.amount.add(loan.accruedInterest).mul(debtUSDPrice);
-      let [initialUSDPrice, latestUSDPrice] = await Promise.all([
-        exchangeRatesContract.rateForCurrency(loan.currency, {
-          blockTag: creationBlockNumber,
-        }),
-        exchangeRatesContract.rateForCurrency(loan.currency),
-      ]);
-      const loanAmount = Big(loan.amount).div(1e18);
-      initialUSDPrice = Big(initialUSDPrice).div(1e18);
-      latestUSDPrice = Big(latestUSDPrice).div(1e18);
-      console.log({
-        initialUSDPrice: initialUSDPrice.toString(),
-        latestUSDPrice: latestUSDPrice.toString(),
-      });
-      const pnl = latestUSDPrice
-        .sub(initialUSDPrice)
-        .div(latestUSDPrice)
-        .mul(loanAmount)
-        .mul(initialUSDPrice);
-      console.log({ pnl: pnl.toString() });
+          {
+            id: loan.id.toString(),
+          }
+        );
+        console.log({ txHash });
+        const {
+          blockNumber: creationBlockNumber,
+        } = await signer.provider.getTransaction(txHash);
+        console.log({ creationBlockNumber });
+        // const interest = loan.amount.add(loan.accruedInterest).mul(debtUSDPrice);
+        let [initialUSDPrice, latestUSDPrice] = await Promise.all([
+          exchangeRatesContract.rateForCurrency(loan.currency, {
+            blockTag: creationBlockNumber,
+          }),
+          exchangeRatesContract.rateForCurrency(loan.currency),
+        ]);
+        const loanAmount = Big(loan.amount).div(1e18);
+        initialUSDPrice = Big(initialUSDPrice).div(1e18);
+        latestUSDPrice = Big(latestUSDPrice).div(1e18);
+        console.log({
+          initialUSDPrice: initialUSDPrice.toString(),
+          latestUSDPrice: latestUSDPrice.toString(),
+        });
+        pnlPercentage = latestUSDPrice.sub(initialUSDPrice).div(latestUSDPrice);
+        pnl = pnlPercentage.mul(loanAmount).mul(initialUSDPrice);
+        pnlPercentage = pnlPercentage.mul(1e2);
+        console.log({
+          pnl: pnl.toString(),
+          pnlPercentage: pnlPercentage.toString(),
+        });
+      }
       return {
         ...loan,
         type,
         minCRatio,
         cratio: await loanContracts[type].collateralRatio(loan),
         pnl,
+        pnlPercentage,
       };
     };
 
@@ -298,6 +304,7 @@ export default function() {
     exchangeRatesContract,
     subgraph,
     signer,
+    network,
   ]);
 
   const startActOnLoan = args => setLoanBeingActedOn(args);

@@ -63,7 +63,15 @@ export default function({ loan, onActOnLoan }) {
       <TableCell>
         {formatUnits(loan.amount, 18)} {targetName}
       </TableCell>
-      <TableCell align="right">{toFixed(loan.pnl, 1, 2)} sUSD</TableCell>
+      <TableCell align="right">
+        {!loan.pnl
+          ? '-'
+          : `${toFixed(loan.pnl, 1, 2)} sUSD (${toFixed(
+              loan.pnlPercentage,
+              1,
+              2
+            )}%)`}
+      </TableCell>
       <TableCell align="right">
         {formatUnits(loan.accruedInterest, 18)}
       </TableCell>
