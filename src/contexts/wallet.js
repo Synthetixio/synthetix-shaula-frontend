@@ -245,13 +245,19 @@ export function WalletProvider({ children }) {
     return data;
   };
 
-  const longsSubgraph = React.useCallback(subgraph(cfg.longsSubgraphUrl), [
-    cfg.longsSubgraphUrl,
-  ]);
-
   const shortsSubgraph = React.useCallback(subgraph(cfg.shortsSubgraphUrl), [
     cfg.shortsSubgraphUrl,
   ]);
+
+  const erc20LoansSubgraph = React.useCallback(
+    subgraph(cfg.erc20LoansSubgraphUrl),
+    [cfg.erc20LoansSubgraphUrl]
+  );
+
+  const ethLoansSubgraph = React.useCallback(
+    subgraph(cfg.ethLoansSubgraphUrl),
+    [cfg.ethLoansSubgraphUrl]
+  );
 
   React.useEffect(() => {
     if (!signer) return;
@@ -288,8 +294,9 @@ export function WalletProvider({ children }) {
         signerOrProvider,
         version,
         setVersion,
-        longsSubgraph,
         shortsSubgraph,
+        erc20LoansSubgraph,
+        ethLoansSubgraph,
 
         erc20LoanContract,
         ethLoanContract,
@@ -329,8 +336,9 @@ export function useWallet() {
     signerOrProvider,
     version,
     setVersion,
-    longsSubgraph,
     shortsSubgraph,
+    erc20LoansSubgraph,
+    ethLoansSubgraph,
 
     erc20LoanContract,
     ethLoanContract,
@@ -361,8 +369,9 @@ export function useWallet() {
     version,
     setVersion,
     availableNetworkNames: Object.keys(NETWORKS[version]),
-    longsSubgraph,
     shortsSubgraph,
+    erc20LoansSubgraph,
+    ethLoansSubgraph,
 
     erc20LoanContract,
     ethLoanContract,

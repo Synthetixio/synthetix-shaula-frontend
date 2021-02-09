@@ -11,6 +11,7 @@ import {
 import { useWallet } from 'contexts/wallet';
 import { Big } from 'utils/big-number';
 import Loader from 'components/Loader';
+import { LOAN_TYPE_ERC20, LOAN_TYPE_ETH, LOAN_TYPE_SHORT } from 'config';
 import Loan from './LoanListItem';
 import LoanActionsModal from './LoanActions/LoanActionsModal';
 
@@ -58,8 +59,9 @@ export default function() {
     loanContracts,
     loanStateContracts,
     exchangeRatesContract,
-    longsSubgraph,
     shortsSubgraph,
+    erc20LoansSubgraph,
+    ethLoansSubgraph,
   } = useWallet();
 
   const [isLoading, setIsLoading] = React.useState(false);
@@ -74,8 +76,9 @@ export default function() {
         shortLoanStateContract &&
         address &&
         exchangeRatesContract &&
-        longsSubgraph &&
-        shortsSubgraph
+        shortsSubgraph &&
+        erc20LoansSubgraph &&
+        ethLoansSubgraph
       )
     )
       return;
@@ -108,58 +111,59 @@ export default function() {
     };
 
     const makeLoan = async ({ loan, type, minCRatio }) => {
-      let pnl, pnlPercentage;
-      if (type === 'short') {
-        const short = type === 'short';
-        const variables = {
-          id: loan.id.toString(),
-        };
-        const subgraph = short ? shortsSubgraph : longsSubgraph;
-        const {
-          shorts: [{ txHash }],
-        } = await subgraph(
-          `query ($id: String!) {
-              ${short ? 'shorts' : 'loans'}(where: {id: $id}) {
+      const variables = {
+        id: loan.id.toString(),
+      };
+      const subgraph = {
+        [LOAN_TYPE_SHORT]: shortsSubgraph,
+        [LOAN_TYPE_ERC20]: erc20LoansSubgraph,
+        [LOAN_TYPE_ETH]: ethLoansSubgraph,
+      }[type];
+      const query = {
+        [LOAN_TYPE_SHORT]: 'shorts',
+        [LOAN_TYPE_ERC20]: 'erc20Loans',
+        [LOAN_TYPE_ETH]: 'ethLoans',
+      }[type];
+      const {
+        [query]: [{ txHash }],
+      } = await subgraph(
+        `query ($id: String!) {
+              ${query}(where: {id: $id}) {
                 txHash
               }
             }`,
-          variables
-        );
-        console.log({ txHash });
-        const {
-          blockNumber: creationBlockNumber,
-        } = await signer.provider.getTransaction(txHash);
-        console.log({ creationBlockNumber });
-        // const interest = loan.amount.add(loan.accruedInterest).mul(debtUSDPrice);
-        let [initialUSDPrice, latestUSDPrice] = await Promise.all([
-          exchangeRatesContract.rateForCurrency(loan.currency, {
-            blockTag: creationBlockNumber,
-          }),
-          exchangeRatesContract.rateForCurrency(loan.currency),
-        ]);
-        const loanAmount = Big(loan.amount).div(1e18);
-        initialUSDPrice = Big(initialUSDPrice).div(1e18);
-        latestUSDPrice = Big(latestUSDPrice).div(1e18);
-        console.log({
-          initialUSDPrice: initialUSDPrice.toString(),
-          latestUSDPrice: latestUSDPrice.toString(),
-        });
-        if (short) {
-          pnlPercentage = initialUSDPrice
-            .sub(latestUSDPrice)
-            .div(initialUSDPrice);
-        } else {
-          pnlPercentage = latestUSDPrice
-            .sub(initialUSDPrice)
-            .div(latestUSDPrice);
-        }
-        pnl = pnlPercentage.mul(loanAmount).mul(initialUSDPrice);
-        pnlPercentage = pnlPercentage.mul(1e2);
-        console.log({
-          pnl: pnl.toString(),
-          pnlPercentage: pnlPercentage.toString(),
-        });
+        variables
+      );
+      const {
+        blockNumber: creationBlockNumber,
+      } = await signer.provider.getTransaction(txHash);
+      // const interest = loan.amount.add(loan.accruedInterest).mul(debtUSDPrice);
+      let [initialUSDPrice, latestUSDPrice] = await Promise.all([
+        exchangeRatesContract.rateForCurrency(loan.currency, {
+          blockTag: creationBlockNumber,
+        }),
+        exchangeRatesContract.rateForCurrency(loan.currency),
+      ]);
+      const loanAmount = Big(loan.amount).div(1e18);
+      initialUSDPrice = Big(initialUSDPrice).div(1e18);
+      latestUSDPrice = Big(latestUSDPrice).div(1e18);
+      let pnlPercentage;
+      if ('short' === type) {
+        pnlPercentage = initialUSDPrice
+          .sub(latestUSDPrice)
+          .div(initialUSDPrice);
+      } else {
+        pnlPercentage = latestUSDPrice.sub(initialUSDPrice).div(latestUSDPrice);
       }
+      const pnl = pnlPercentage.mul(loanAmount).mul(initialUSDPrice);
+      pnlPercentage = pnlPercentage.mul(1e2);
+      console.log({
+        initialUSDPrice: initialUSDPrice.toString(),
+        latestUSDPrice: latestUSDPrice.toString(),
+        pnl: pnl.toString(),
+        pnlPercentage: pnlPercentage.toString(),
+      });
+
       return {
         ...loan,
         type,
@@ -314,8 +318,9 @@ export default function() {
     loanContracts,
     loanStateContracts,
     exchangeRatesContract,
-    longsSubgraph,
     shortsSubgraph,
+    erc20LoansSubgraph,
+    ethLoansSubgraph,
     signer,
   ]);
 
