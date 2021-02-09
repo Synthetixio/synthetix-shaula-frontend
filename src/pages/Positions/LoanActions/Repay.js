@@ -20,7 +20,7 @@ export default function({ loan, debtName, closeModal }) {
     address,
     config: { tokens },
   } = useWallet();
-  const { tx } = useNotifications();
+  const { tx, showErrorNotification } = useNotifications();
 
   const [debtDecimals, debtAddress] = tokens[debtName];
 
@@ -37,11 +37,21 @@ export default function({ loan, debtName, closeModal }) {
 
   const repay = async e => {
     e.preventDefault();
+    if (debtAmount.gt(loan.amount)) {
+      return showErrorNotification(
+        'Repayment amount is greater than the debt.'
+      );
+    }
+    if (debtAmount.eq(loan.amount)) {
+      return showErrorNotification(
+        'Consider closing the loan instead of performing a full repayment.'
+      );
+    }
     try {
       setIsWorking('Repaying...');
       await tx(
         `Repaying debt for loan(#${loan.id.toString()})`,
-        `Repaying debt for loan(#${loan.id.toString()}).`,
+        `Repayed debt for loan(#${loan.id.toString()}).`,
         () => [loanContract, 'repay', [address, loan.id, debtAmount]]
       );
       closeModal();
