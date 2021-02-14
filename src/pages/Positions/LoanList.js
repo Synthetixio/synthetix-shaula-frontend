@@ -24,6 +24,9 @@ export const useStyles = makeStyles(theme => ({
     [theme.breakpoints.down('sm')]: {
       margin: 10,
     },
+    '& th, td': {
+      verticalAlign: 'top',
+    },
   },
   content: {
     flex: 1,
@@ -157,12 +160,15 @@ export default function() {
       }
       const pnl = pnlPercentage.mul(loanAmount).mul(initialUSDPrice);
       pnlPercentage = pnlPercentage.mul(1e2);
+
       console.log({
         initialUSDPrice: initialUSDPrice.toString(),
         latestUSDPrice: latestUSDPrice.toString(),
         pnl: pnl.toString(),
         pnlPercentage: pnlPercentage.toString(),
       });
+
+      const accruedInterestUSD = Big(loan.accruedInterest).mul(latestUSDPrice);
 
       return {
         ...loan,
@@ -171,6 +177,7 @@ export default function() {
         cratio: await loanContracts[type].collateralRatio(loan),
         pnl,
         pnlPercentage,
+        accruedInterestUSD,
       };
     };
 
@@ -346,8 +353,8 @@ export default function() {
                   <TableCell>ID</TableCell>
                   <TableCell>Date</TableCell>
                   <TableCell>Type</TableCell>
-                  <TableCell>Collateral</TableCell>
-                  <TableCell>Debt</TableCell>
+                  <TableCell align="right">Collateral</TableCell>
+                  <TableCell align="right">Debt</TableCell>
                   <TableCell align="right">PNL</TableCell>
                   <TableCell align="right">Accrued&nbsp; Interest</TableCell>
                   <TableCell align="right">CRatio</TableCell>

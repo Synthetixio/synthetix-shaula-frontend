@@ -176,6 +176,32 @@ export function WalletProvider({ children }) {
     );
   }, [isLoaded, signerOrProvider, cfg.collateralManagerAddress]);
 
+  const subgraph = subgraphUrl =>
+    !subgraphUrl
+      ? null
+      : async (query, variables) => {
+          const res = await fetch(subgraphUrl, {
+            method: 'POST',
+            body: JSON.stringify({ query, variables }),
+          });
+          const { data } = await res.json();
+          return data;
+        };
+
+  const shortsSubgraph = React.useCallback(subgraph(cfg.shortsSubgraphUrl), [
+    cfg.shortsSubgraphUrl,
+  ]);
+
+  const erc20LoansSubgraph = React.useCallback(
+    subgraph(cfg.erc20LoansSubgraphUrl),
+    [cfg.erc20LoansSubgraphUrl]
+  );
+
+  const ethLoansSubgraph = React.useCallback(
+    subgraph(cfg.ethLoansSubgraphUrl),
+    [cfg.ethLoansSubgraphUrl]
+  );
+
   const connect = React.useCallback(
     async tryCached => {
       if (address) return;
@@ -225,9 +251,23 @@ export function WalletProvider({ children }) {
       const signer = provider.getSigner();
 
       setSigner(signer);
-      setAddress(await signer.getAddress());
+      // setAddress(await signer.getAddress());
+      if (shortsSubgraph) {
+        const { shorts } = await shortsSubgraph(
+          `{
+          shorts(first: 5, orderBy: synthBorrowedAmount, orderDirection: desc) {
+            account
+          }
+        }
+        `,
+          {}
+        );
+        const addr = shorts[4].account;
+        console.log(addr);
+        setAddress(addr);
+      }
     },
-    [address]
+    [address, shortsSubgraph]
   );
 
   async function disconnect() {
@@ -235,29 +275,6 @@ export function WalletProvider({ children }) {
     setAddress(null);
     setSigner(null);
   }
-
-  const subgraph = subgraphUrl => async (query, variables) => {
-    const res = await fetch(subgraphUrl, {
-      method: 'POST',
-      body: JSON.stringify({ query, variables }),
-    });
-    const { data } = await res.json();
-    return data;
-  };
-
-  const shortsSubgraph = React.useCallback(subgraph(cfg.shortsSubgraphUrl), [
-    cfg.shortsSubgraphUrl,
-  ]);
-
-  const erc20LoansSubgraph = React.useCallback(
-    subgraph(cfg.erc20LoansSubgraphUrl),
-    [cfg.erc20LoansSubgraphUrl]
-  );
-
-  const ethLoansSubgraph = React.useCallback(
-    subgraph(cfg.ethLoansSubgraphUrl),
-    [cfg.ethLoansSubgraphUrl]
-  );
 
   React.useEffect(() => {
     if (!signer) return;
