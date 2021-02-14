@@ -11,7 +11,7 @@ const VERSION = 'v2';
 const NETWORKS = [
   'mainnet',
   'kovan',
-  'rinkeby',
+  // 'rinkeby',
   // 'ropsten',
 ];
 
@@ -90,6 +90,7 @@ async function getNetworkConfig(network) {
     infuraProvider
   );
   const renBTCAddress = await loanContract.underlyingContract();
+  const kovan = network === 'kovan';
 
   const cfg = {
     tokens: {
@@ -112,6 +113,18 @@ async function getNetworkConfig(network) {
 
     exchangerAddress,
     exchangeRatesAddress,
+
+    shortsSubgraphUrl: kovan
+      ? 'https://api.thegraph.com/subgraphs/name/vbstreetz/synthetix-shorts'
+      : 'https://api.thegraph.com/subgraphs/name/dvd-schwrtz/test',
+
+    erc20LoansSubgraphUrl: kovan
+      ? 'https://api.thegraph.com/subgraphs/name/vbstreetz/collateral-erc20-loans-kovan'
+      : 'https://api.thegraph.com/subgraphs/name/vbstreetz/collateral-erc20-loans',
+
+    ethLoansSubgraphUrl: kovan
+      ? 'https://api.thegraph.com/subgraphs/name/vbstreetz/collateral-eth-loans-kovan'
+      : 'https://api.thegraph.com/subgraphs/name/vbstreetz/collateral-eth-loans',
   };
 
   return cfg;

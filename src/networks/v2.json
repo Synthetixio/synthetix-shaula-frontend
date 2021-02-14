@@ -30,7 +30,10 @@
     "shortLoanStateContractAddress": "0x13A114a3Fa8A6CE03a0C5488BE9e614d78eDdb0c",
     "collateralManagerAddress": "0x067e398605E84F2D0aEEC1806e62768C5110DCc6",
     "exchangerAddress": "0x0bfDc04B38251394542586969E2356d0D731f7DE",
-    "exchangeRatesAddress": "0xd69b189020EF614796578AfE4d10378c5e7e1138"
+    "exchangeRatesAddress": "0xd69b189020EF614796578AfE4d10378c5e7e1138",
+    "shortsSubgraphUrl": "https://api.thegraph.com/subgraphs/name/dvd-schwrtz/test",
+    "erc20LoansSubgraphUrl": "https://api.thegraph.com/subgraphs/name/vbstreetz/collateral-erc20-loans",
+    "ethLoansSubgraphUrl": "https://api.thegraph.com/subgraphs/name/vbstreetz/collateral-eth-loans"
   },
   "kovan": {
     "tokens": {
@@ -63,39 +66,9 @@
     "shortLoanStateContractAddress": "0xd74E3A605A1a7A8a83D25DF00D4057985E3CAC30",
     "collateralManagerAddress": "0x53baE964339e8A742B5b47F6C10bbfa8Ff138F34",
     "exchangerAddress": "0xF49528689234d46724383669BD8658bfB47f8575",
-    "exchangeRatesAddress": "0xC9985cAc4a69588Da66F74E42845B784798fe5aB"
-  },
-  "rinkeby": {
-    "tokens": {
-      "sBTC": [
-        18,
-        "0x27861E4776D162743ccD78379aDe6A876caf2203"
-      ],
-      "sETH": [
-        18,
-        "0xA83AbFdC9E8Ee990C3C6C0f56a4B06e0faAd583C"
-      ],
-      "sUSD": [
-        18,
-        "0x1150FcF21c5fb154e971fb526A0A777907F87579"
-      ],
-      "renBTC": [
-        8,
-        "0xEDC0C23864B041607D624E2d9a67916B6cf40F7a"
-      ],
-      "ETH": [
-        18,
-        "0xee"
-      ]
-    },
-    "erc20LoanContractAddress": "0x3c88F556807ec4779BB24fE8FAB81Df4ABBdfed8",
-    "ethLoanContractAddress": "0x812b08B097faAA3D72034Ab639EEba063aebA1ab",
-    "shortLoanContractAddress": "0x852a385B32C2F226476500Cc303EB014448B66FB",
-    "erc20LoanStateContractAddress": "0xe2fd57caF070A3F995D597a8B21cbF206E34Ff38",
-    "ethLoanStateContractAddress": "0x8f28322A3e85296D00dc3c378519AaB7f570bA79",
-    "shortLoanStateContractAddress": "0xFAdbaf925eC35D97ae3EB87b458d005Dfd4C4b52",
-    "collateralManagerAddress": "0xFC4B21B7CC5DCC62aE4ae229Ee96Af1DB1678F35",
-    "exchangerAddress": "0x0260F7587a73815E3747Ce3D31FAF1383E1B653a",
-    "exchangeRatesAddress": "0x8a8DeBDF5Ca68d381dE99244AAEa8b906Daf78A7"
+    "exchangeRatesAddress": "0xC9985cAc4a69588Da66F74E42845B784798fe5aB",
+    "shortsSubgraphUrl": "https://api.thegraph.com/subgraphs/name/vbstreetz/synthetix-shorts",
+    "erc20LoansSubgraphUrl": "https://api.thegraph.com/subgraphs/name/vbstreetz/collateral-erc20-loans-kovan",
+    "ethLoansSubgraphUrl": "https://api.thegraph.com/subgraphs/name/vbstreetz/collateral-eth-loans-kovan"
   }
 }

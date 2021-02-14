@@ -5,7 +5,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import { TableCell, TableRow, Tooltip } from '@material-ui/core';
 import { Help as TipIcon } from '@material-ui/icons';
 import { useWallet } from 'contexts/wallet';
-import { formatUnits } from 'utils/big-number';
+import { formatUnits, toFixed, isZero } from 'utils/big-number';
 import {
   LOAN_TYPE_ERC20,
   LOAN_TYPE_ETH,
@@ -57,14 +57,26 @@ export default function({ loan, onActOnLoan }) {
           .format('YYYY-MM-DD HH:mm')}
       </TableCell>
       <TableCell>{loan.short ? 'Short' : 'Borrow'}</TableCell>
-      <TableCell>
+      <TableCell align="right">
         {formatUnits(loan.collateral, 18)} {collateralName}
       </TableCell>
-      <TableCell>
+      <TableCell align="right">
         {formatUnits(loan.amount, 18)} {targetName}
       </TableCell>
       <TableCell align="right">
-        {formatUnits(loan.accruedInterest, 18)}
+        {isZero(loan.pnl) ? (
+          '-'
+        ) : (
+          <div>
+            <div>{toFixed(loan.pnl, 1, 2)} sUSD</div>
+            <div>{toFixed(loan.pnlPercentage, 1, 2)}%</div>
+          </div>
+        )}
+      </TableCell>
+      <TableCell align="right">
+        {isZero(loan.accruedInterestUSD)
+          ? '-'
+          : `${formatUnits(loan.accruedInterestUSD, 18, 2)} sUSD`}
       </TableCell>
       <TableCell
         align="right"

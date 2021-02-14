@@ -9,7 +9,9 @@ import {
   TableRow,
 } from '@material-ui/core';
 import { useWallet } from 'contexts/wallet';
+import { Big } from 'utils/big-number';
 import Loader from 'components/Loader';
+import { LOAN_TYPE_ERC20, LOAN_TYPE_ETH, LOAN_TYPE_SHORT } from 'config';
 import Loan from './LoanListItem';
 import LoanActionsModal from './LoanActions/LoanActionsModal';
 
@@ -21,6 +23,9 @@ export const useStyles = makeStyles(theme => ({
     flex: 1,
     [theme.breakpoints.down('sm')]: {
       margin: 10,
+    },
+    '& th, td': {
+      verticalAlign: 'top',
     },
   },
   content: {
@@ -56,6 +61,10 @@ export default function() {
     shortLoanStateContract,
     loanContracts,
     loanStateContracts,
+    exchangeRatesContract,
+    shortsSubgraph,
+    erc20LoansSubgraph,
+    ethLoansSubgraph,
   } = useWallet();
 
   const [isLoading, setIsLoading] = React.useState(false);
@@ -63,8 +72,22 @@ export default function() {
   const [loanBeingActedOn, setLoanBeingActedOn] = React.useState(null);
 
   React.useEffect(() => {
+    if (
+      !(
+        erc20LoanStateContract &&
+        ethLoanStateContract &&
+        shortLoanStateContract &&
+        address &&
+        exchangeRatesContract &&
+        shortsSubgraph &&
+        erc20LoansSubgraph &&
+        ethLoansSubgraph
+      )
+    )
+      return;
+
     let isMounted = true;
-    const unsubs = [];
+    const unsubs = [() => (isMounted = false)];
 
     const getLoanIndices = async type => {
       const [n, minCRatio] = await Promise.all([
@@ -91,45 +114,94 @@ export default function() {
     };
 
     const makeLoan = async ({ loan, type, minCRatio }) => {
+      const variables = {
+        id: loan.id.toString(),
+      };
+      const subgraph = {
+        [LOAN_TYPE_SHORT]: shortsSubgraph,
+        [LOAN_TYPE_ERC20]: erc20LoansSubgraph,
+        [LOAN_TYPE_ETH]: ethLoansSubgraph,
+      }[type];
+      const query = {
+        [LOAN_TYPE_SHORT]: 'shorts',
+        [LOAN_TYPE_ERC20]: 'erc20Loans',
+        [LOAN_TYPE_ETH]: 'ethLoans',
+      }[type];
+      const {
+        [query]: [{ txHash }],
+      } = await subgraph(
+        `query ($id: String!) {
+              ${query}(where: {id: $id}) {
+                txHash
+              }
+            }`,
+        variables
+      );
+      const {
+        blockNumber: creationBlockNumber,
+      } = await signer.provider.getTransaction(txHash);
+      // const interest = loan.amount.add(loan.accruedInterest).mul(debtUSDPrice);
+      let [initialUSDPrice, latestUSDPrice] = await Promise.all([
+        exchangeRatesContract.rateForCurrency(loan.currency, {
+          blockTag: creationBlockNumber,
+        }),
+        exchangeRatesContract.rateForCurrency(loan.currency),
+      ]);
+      const loanAmount = Big(loan.amount).div(1e18);
+      initialUSDPrice = Big(initialUSDPrice).div(1e18);
+      latestUSDPrice = Big(latestUSDPrice).div(1e18);
+      let pnlPercentage;
+      if ('short' === type) {
+        pnlPercentage = initialUSDPrice
+          .sub(latestUSDPrice)
+          .div(initialUSDPrice);
+      } else {
+        pnlPercentage = latestUSDPrice.sub(initialUSDPrice).div(latestUSDPrice);
+      }
+      const pnl = pnlPercentage.mul(loanAmount).mul(initialUSDPrice);
+      pnlPercentage = pnlPercentage.mul(1e2);
+
+      console.log({
+        initialUSDPrice: initialUSDPrice.toString(),
+        latestUSDPrice: latestUSDPrice.toString(),
+        pnl: pnl.toString(),
+        pnlPercentage: pnlPercentage.toString(),
+      });
+
+      const accruedInterestUSD = Big(loan.accruedInterest).mul(latestUSDPrice);
+
       return {
         ...loan,
         type,
         minCRatio,
         cratio: await loanContracts[type].collateralRatio(loan),
+        pnl,
+        pnlPercentage,
+        accruedInterestUSD,
       };
     };
 
     const loadLoans = async () => {
-      if (
-        !(
-          erc20LoanStateContract &&
-          ethLoanStateContract &&
-          shortLoanStateContract &&
-          address
-        )
-      )
-        return;
       setIsLoading(true);
 
       const loanIndices = await Promise.all(
         Object.keys(loanStateContracts).map(getLoanIndices)
       );
       const loans = await Promise.all(loanIndices.map(getLoans));
-      const activeLoans = [];
+      let activeLoans = [];
       for (let i = 0; i < loans.length; i++) {
         for (let j = 0; j < loans[i].length; j++) {
           const { type, minCRatio, loan } = loans[i][j];
           if (!loan.amount.isZero()) {
-            activeLoans.push(
-              await makeLoan({
-                loan,
-                type,
-                minCRatio,
-              })
-            );
+            activeLoans.push({
+              loan,
+              type,
+              minCRatio,
+            });
           }
         }
       }
+      activeLoans = await Promise.all(activeLoans.map(makeLoan));
       activeLoans.sort((a, b) => {
         if (a.id.gt(b.id)) return -1;
         if (a.id.lt(b.id)) return 1;
@@ -143,15 +215,6 @@ export default function() {
 
     // subscribe to loan open+close
     const subscribe = () => {
-      if (
-        !(
-          erc20LoanStateContract &&
-          ethLoanStateContract &&
-          shortLoanStateContract &&
-          address
-        )
-      )
-        return () => {};
       for (const type in loanContracts) {
         const contract = loanContracts[type];
 
@@ -252,7 +315,6 @@ export default function() {
     loadLoans();
     subscribe();
     return () => {
-      isMounted = false;
       unsubs.forEach(unsub => unsub());
     };
   }, [
@@ -262,6 +324,11 @@ export default function() {
     address,
     loanContracts,
     loanStateContracts,
+    exchangeRatesContract,
+    shortsSubgraph,
+    erc20LoansSubgraph,
+    ethLoansSubgraph,
+    signer,
   ]);
 
   const startActOnLoan = args => setLoanBeingActedOn(args);
@@ -286,8 +353,9 @@ export default function() {
                   <TableCell>ID</TableCell>
                   <TableCell>Date</TableCell>
                   <TableCell>Type</TableCell>
-                  <TableCell>Collateral</TableCell>
-                  <TableCell>Debt</TableCell>
+                  <TableCell align="right">Collateral</TableCell>
+                  <TableCell align="right">Debt</TableCell>
+                  <TableCell align="right">PNL</TableCell>
                   <TableCell align="right">Accrued&nbsp; Interest</TableCell>
                   <TableCell align="right">CRatio</TableCell>
                   <TableCell align="right"></TableCell>
