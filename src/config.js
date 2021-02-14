@@ -17,3 +17,5 @@ export const DANGER_COLOR = '#d32f2f';
 export const INFURA_ID = process.env.REACT_APP_INFURA_ID;
 
 export const MIN_CRATIO = 150;
+
+export const SECONDS_IN_A_YR = 365 * 24 * 60 * 60;

@@ -147,7 +147,6 @@ function Owing({ loadOwings, reclaimAmount, currency }) {
   const [isSettling, setIsSettling] = React.useState(false);
 
   const settle = async () => {
-    console.log(tokenKeysByName[currency]);
     try {
       setIsSettling(true);
       await tx(

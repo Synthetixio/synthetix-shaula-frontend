@@ -161,12 +161,12 @@ export default function() {
       const pnl = pnlPercentage.mul(loanAmount).mul(initialUSDPrice);
       pnlPercentage = pnlPercentage.mul(1e2);
 
-      console.log({
-        initialUSDPrice: initialUSDPrice.toString(),
-        latestUSDPrice: latestUSDPrice.toString(),
-        pnl: pnl.toString(),
-        pnlPercentage: pnlPercentage.toString(),
-      });
+      // console.log({
+      //   initialUSDPrice: initialUSDPrice.toString(),
+      //   latestUSDPrice: latestUSDPrice.toString(),
+      //   pnl: pnl.toString(),
+      //   pnlPercentage: pnlPercentage.toString(),
+      // });
 
       const accruedInterestUSD = Big(loan.accruedInterest).mul(latestUSDPrice);
 

@@ -10,7 +10,7 @@ import {
   Button,
 } from '@material-ui/core';
 import { useWallet } from 'contexts/wallet';
-import { isZero, formatUnits } from 'utils/big-number';
+import { isZero, formatUnits, toFixed } from 'utils/big-number';
 import Balance from 'components/Balance';
 import CRatio from 'components/CRatio';
 import ERC20_CONTRACT_ABI from 'abis/erc20.json';
@@ -61,6 +61,16 @@ export const useStyles = makeStyles(theme => ({
       fontSize: 12,
     },
   },
+  feesContainer: {
+    display: 'flex',
+    justifyContent: 'flex-end',
+    textAlign: 'right',
+  },
+  feesContainerInner: {
+    display: 'grid',
+    gridTemplateRows: '1fr 1fr',
+    gridTemplateColumns: '1fr 1fr',
+  },
 }));
 
 export default function({ collateralAssetsFilter, debtAssets, short }) {
@@ -84,6 +94,14 @@ export default function({ collateralAssetsFilter, debtAssets, short }) {
     ethLoanContract,
     shortLoanContract,
     exchangeRatesContract,
+
+    erc20BorrowIssueFeeRate,
+    ethBorrowIssueFeeRate,
+    annualBorrowRate,
+
+    shortIssueFeeRate,
+    sETHShortRate,
+    sBTCShortRate,
   } = useWallet();
 
   const [isApproving, setIsApproving] = React.useState(false);
@@ -396,6 +414,42 @@ export default function({ collateralAssetsFilter, debtAssets, short }) {
           fullWidth
           onChange={e => setDebtAmountNumber(e.target.value || 0)}
         />
+
+        <Box mb={2} className={classes.feesContainer}>
+          <Box className={classes.feesContainerInner}>
+            {short ? (
+              <>
+                <Box>Issuance Fee:</Box>
+                <Box>{toFixed(shortIssueFeeRate, 1, 2)}%</Box>
+                <Box>Annual Short Rate:</Box>
+                <Box>
+                  {toFixed(
+                    debtName === 'sETH' ? sETHShortRate : sBTCShortRate,
+                    1,
+                    2
+                  )}
+                  %
+                </Box>
+              </>
+            ) : (
+              <>
+                <Box>Issuance Fee:</Box>
+                <Box>
+                  {toFixed(
+                    collateralIsETH
+                      ? ethBorrowIssueFeeRate
+                      : erc20BorrowIssueFeeRate,
+                    1,
+                    2
+                  )}
+                  %
+                </Box>
+                <Box>Annual Borrow Rate:</Box>
+                <Box>{toFixed(annualBorrowRate, 1, 2)}%</Box>
+              </>
+            )}
+          </Box>
+        </Box>
 
         <Button
           color="secondary"

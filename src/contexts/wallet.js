@@ -8,9 +8,11 @@ import {
   LOAN_TYPE_ETH,
   LOAN_TYPE_SHORT,
   INFURA_ID,
+  SECONDS_IN_A_YR,
 } from 'config';
 import cache from 'utils/cache';
 import { bytesFormatter } from 'utils/snx';
+import { Big } from 'utils/big-number';
 import NETWORKS_V1 from 'networks/v1.json';
 import NETWORKS_V2 from 'networks/v2.json';
 import LOAN_STATE_ABI from 'abis/loan-state.json';
@@ -50,6 +52,18 @@ export function WalletProvider({ children }) {
   const [signer, setSigner] = React.useState(null);
   const [network, setNetwork] = React.useState('');
   const [version, setVersion] = React.useState(2);
+
+  const [annualBorrowRate, setAnnualBorrowRate] = React.useState(Big('0'));
+  const [sETHShortRate, setSETHShortRate] = React.useState(Big('0'));
+  const [sBTCShortRate, setSBTCShortRate] = React.useState(Big('0'));
+  //
+  const [erc20BorrowIssueFeeRate, setErc20BorrowIssueFeeRate] = React.useState(
+    Big('0')
+  );
+  const [ethBorrowIssueFeeRate, setEthBorrowIssueFeeRate] = React.useState(
+    Big('0')
+  );
+  const [shortIssueFeeRate, setShortIssueFeeRate] = React.useState(Big('0'));
 
   const cfg = React.useMemo(() => {
     if (!network) return {};
@@ -251,23 +265,27 @@ export function WalletProvider({ children }) {
       const signer = provider.getSigner();
 
       setSigner(signer);
-      // setAddress(await signer.getAddress());
-      if (shortsSubgraph) {
-        const { shorts } = await shortsSubgraph(
-          `{
-          shorts(first: 5, orderBy: synthBorrowedAmount, orderDirection: desc) {
-            account
-          }
-        }
-        `,
-          {}
-        );
-        const addr = shorts[4].account;
-        console.log(addr);
-        setAddress(addr);
-      }
+      setAddress(await signer.getAddress());
+
+      // if (shortsSubgraph) {
+      //   const { shorts } = await shortsSubgraph(
+      //     `{
+      //     shorts(first: 5, orderBy: synthBorrowedAmount, orderDirection: desc) {
+      //       account
+      //     }
+      //   }
+      //   `,
+      //     {}
+      //   );
+      //   const addr = shorts[4].account;
+      //   console.log(addr);
+      //   setAddress(addr);
+      // }
     },
-    [address, shortsSubgraph]
+    [
+      address,
+      // , shortsSubgraph
+    ]
   );
 
   async function disconnect() {
@@ -296,6 +314,75 @@ export function WalletProvider({ children }) {
     })();
     return () => (isMounted = false);
   }, [connect]);
+
+  React.useEffect(() => {
+    if (
+      !(
+        collateralManagerContract &&
+        erc20LoanContract &&
+        ethLoanContract &&
+        shortLoanContract &&
+        cfg.tokenKeysByName
+      )
+    )
+      return;
+
+    let isMounted = true;
+    (async () => {
+      const results = await Promise.allSettled([
+        collateralManagerContract.getBorrowRate(),
+        collateralManagerContract.getShortRate(cfg.tokenKeysByName['sETH']),
+        collateralManagerContract.getShortRate(cfg.tokenKeysByName['sBTC']),
+        //
+        erc20LoanContract.issueFeeRate(),
+        ethLoanContract.issueFeeRate(),
+        shortLoanContract.issueFeeRate(),
+      ]);
+      // const [
+      //   [borrowRate],
+      //   [sETHShortRate],
+      //   [sBTCShortRate],
+      //   //
+      //   erc20BorrowIssueFeeRate,
+      //   ethBorrowIssueFeeRate,
+      //   shortIssueFeeRate,
+      // ] = results;
+      const borrowRate = results[0].value[0];
+      const sETHShortRate =
+        results[1].status === 'rejected' ? 0 : results[1].value[0];
+      const sBTCShortRate =
+        results[2].status === 'rejected' ? 0 : results[2].value[0];
+      //
+      const erc20BorrowIssueFeeRate = results[3].value;
+      const ethBorrowIssueFeeRate = results[4].value;
+      const shortIssueFeeRate = results[5].value;
+      if (isMounted) {
+        const perYr = SECONDS_IN_A_YR * 1e2 * (1 / 1e18);
+        setAnnualBorrowRate(Big(borrowRate).mul(perYr));
+        setSETHShortRate(Big(sETHShortRate).mul(perYr));
+        setSBTCShortRate(Big(sBTCShortRate).mul(perYr));
+        //
+        setErc20BorrowIssueFeeRate(
+          Big(erc20BorrowIssueFeeRate).mul(1e2 / 1e18)
+        );
+        setEthBorrowIssueFeeRate(Big(ethBorrowIssueFeeRate).mul(1e2 / 1e18));
+        setShortIssueFeeRate(Big(shortIssueFeeRate).mul(1e2 / 1e18));
+      }
+    })();
+    return () => (isMounted = false);
+  }, [
+    setAnnualBorrowRate,
+    setErc20BorrowIssueFeeRate,
+    setEthBorrowIssueFeeRate,
+    setShortIssueFeeRate,
+
+    collateralManagerContract,
+    erc20LoanContract,
+    ethLoanContract,
+    shortLoanContract,
+
+    cfg.tokenKeysByName,
+  ]);
 
   return (
     <WalletContext.Provider
@@ -329,6 +416,14 @@ export function WalletProvider({ children }) {
         exchangeRatesContract,
 
         collateralManagerContract,
+
+        erc20BorrowIssueFeeRate,
+        ethBorrowIssueFeeRate,
+        annualBorrowRate,
+
+        shortIssueFeeRate,
+        sETHShortRate,
+        sBTCShortRate,
       }}
     >
       {children}
@@ -371,6 +466,14 @@ export function useWallet() {
     exchangeRatesContract,
 
     collateralManagerContract,
+
+    erc20BorrowIssueFeeRate,
+    ethBorrowIssueFeeRate,
+    annualBorrowRate,
+
+    shortIssueFeeRate,
+    sETHShortRate,
+    sBTCShortRate,
   } = context;
 
   return {
@@ -404,6 +507,14 @@ export function useWallet() {
     exchangeRatesContract,
 
     collateralManagerContract,
+
+    erc20BorrowIssueFeeRate,
+    ethBorrowIssueFeeRate,
+    annualBorrowRate,
+
+    shortIssueFeeRate,
+    sETHShortRate,
+    sBTCShortRate,
   };
 }
 
