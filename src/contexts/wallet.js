@@ -331,8 +331,10 @@ export function WalletProvider({ children }) {
     (async () => {
       const results = await Promise.allSettled([
         collateralManagerContract.getBorrowRate(),
-        collateralManagerContract.getShortRate(cfg.tokenKeysByName['sETH']),
-        collateralManagerContract.getShortRate(cfg.tokenKeysByName['sBTC']),
+        // collateralManagerContract.getShortRate(cfg.tokenKeysByName['sETH']),
+        // collateralManagerContract.getShortRate(cfg.tokenKeysByName['sBTC']),
+        Promise.resolve(['0']),
+        Promise.resolve(['0']),
         //
         erc20LoanContract.issueFeeRate(),
         ethLoanContract.issueFeeRate(),

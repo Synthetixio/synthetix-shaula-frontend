@@ -69,7 +69,7 @@ export const useStyles = makeStyles(theme => ({
   feesContainerInner: {
     display: 'grid',
     gridTemplateRows: '1fr 1fr',
-    gridTemplateColumns: '1fr 1fr',
+    gridTemplateColumns: '1fr 70px',
   },
 }));
 
