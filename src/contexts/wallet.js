@@ -53,17 +53,21 @@ export function WalletProvider({ children }) {
   const [network, setNetwork] = React.useState('');
   const [version, setVersion] = React.useState(2);
 
-  const [annualBorrowRate, setAnnualBorrowRate] = React.useState(Big('0'));
-  const [sETHShortRate, setSETHShortRate] = React.useState(Big('0'));
-  const [sBTCShortRate, setSBTCShortRate] = React.useState(Big('0'));
-  //
-  const [erc20BorrowIssueFeeRate, setErc20BorrowIssueFeeRate] = React.useState(
-    Big('0')
-  );
-  const [ethBorrowIssueFeeRate, setEthBorrowIssueFeeRate] = React.useState(
-    Big('0')
-  );
-  const [shortIssueFeeRate, setShortIssueFeeRate] = React.useState(Big('0'));
+  const [annualLoanRates, setAnnualLoanRates] = React.useState({
+    borrow: Big('0'),
+    sETHShort: Big('0'),
+    sBTCShort: Big('0'),
+  });
+  const [issueFeeRates, setIssueFeeRates] = React.useState({
+    [LOAN_TYPE_ERC20]: Big('0'),
+    [LOAN_TYPE_ETH]: Big('0'),
+    [LOAN_TYPE_SHORT]: Big('0'),
+  });
+  const [interactionDelays, setInteractionDelays] = React.useState({
+    [LOAN_TYPE_ERC20]: Big('0'),
+    [LOAN_TYPE_ETH]: Big('0'),
+    [LOAN_TYPE_SHORT]: Big('0'),
+  });
 
   const cfg = React.useMemo(() => {
     if (!network) return {};
@@ -329,7 +333,19 @@ export function WalletProvider({ children }) {
 
     let isMounted = true;
     (async () => {
-      const results = await Promise.allSettled([
+      const [
+        [borrowRate],
+        [sETHShortRate],
+        [sBTCShortRate],
+        //
+        erc20BorrowIssueFeeRate,
+        ethBorrowIssueFeeRate,
+        shortIssueFeeRate,
+        //
+        erc20InteractionDelay,
+        ethInteractionDelay,
+        shortInteractionDelay,
+      ] = await Promise.all([
         collateralManagerContract.getBorrowRate(),
         // collateralManagerContract.getShortRate(cfg.tokenKeysByName['sETH']),
         // collateralManagerContract.getShortRate(cfg.tokenKeysByName['sBTC']),
@@ -339,50 +355,36 @@ export function WalletProvider({ children }) {
         erc20LoanContract.issueFeeRate(),
         ethLoanContract.issueFeeRate(),
         shortLoanContract.issueFeeRate(),
+        //
+        erc20LoanContract.interactionDelay(),
+        ethLoanContract.interactionDelay(),
+        shortLoanContract.interactionDelay(),
       ]);
-      // const [
-      //   [borrowRate],
-      //   [sETHShortRate],
-      //   [sBTCShortRate],
-      //   //
-      //   erc20BorrowIssueFeeRate,
-      //   ethBorrowIssueFeeRate,
-      //   shortIssueFeeRate,
-      // ] = results;
-      const borrowRate = results[0].value[0];
-      const sETHShortRate =
-        results[1].status === 'rejected' ? 0 : results[1].value[0];
-      const sBTCShortRate =
-        results[2].status === 'rejected' ? 0 : results[2].value[0];
-      //
-      const erc20BorrowIssueFeeRate = results[3].value;
-      const ethBorrowIssueFeeRate = results[4].value;
-      const shortIssueFeeRate = results[5].value;
       if (isMounted) {
         const perYr = SECONDS_IN_A_YR * 1e2 * (1 / 1e18);
-        setAnnualBorrowRate(Big(borrowRate).mul(perYr));
-        setSETHShortRate(Big(sETHShortRate).mul(perYr));
-        setSBTCShortRate(Big(sBTCShortRate).mul(perYr));
-        //
-        setErc20BorrowIssueFeeRate(
-          Big(erc20BorrowIssueFeeRate).mul(1e2 / 1e18)
-        );
-        setEthBorrowIssueFeeRate(Big(ethBorrowIssueFeeRate).mul(1e2 / 1e18));
-        setShortIssueFeeRate(Big(shortIssueFeeRate).mul(1e2 / 1e18));
+        setAnnualLoanRates({
+          borrow: Big(borrowRate).mul(perYr),
+          sETHShort: Big(sETHShortRate).mul(perYr),
+          sBTCShort: Big(sBTCShortRate).mul(perYr),
+        });
+        setIssueFeeRates({
+          [LOAN_TYPE_ERC20]: Big(erc20BorrowIssueFeeRate).mul(1e2 / 1e18),
+          [LOAN_TYPE_ETH]: Big(ethBorrowIssueFeeRate).mul(1e2 / 1e18),
+          [LOAN_TYPE_SHORT]: Big(shortIssueFeeRate).mul(1e2 / 1e18),
+        });
+        setInteractionDelays({
+          [LOAN_TYPE_ERC20]: erc20InteractionDelay,
+          [LOAN_TYPE_ETH]: ethInteractionDelay,
+          [LOAN_TYPE_SHORT]: shortInteractionDelay,
+        });
       }
     })();
     return () => (isMounted = false);
   }, [
-    setAnnualBorrowRate,
-    setErc20BorrowIssueFeeRate,
-    setEthBorrowIssueFeeRate,
-    setShortIssueFeeRate,
-
     collateralManagerContract,
     erc20LoanContract,
     ethLoanContract,
     shortLoanContract,
-
     cfg.tokenKeysByName,
   ]);
 
@@ -419,13 +421,9 @@ export function WalletProvider({ children }) {
 
         collateralManagerContract,
 
-        erc20BorrowIssueFeeRate,
-        ethBorrowIssueFeeRate,
-        annualBorrowRate,
-
-        shortIssueFeeRate,
-        sETHShortRate,
-        sBTCShortRate,
+        annualLoanRates,
+        issueFeeRates,
+        interactionDelays,
       }}
     >
       {children}
@@ -469,13 +467,9 @@ export function useWallet() {
 
     collateralManagerContract,
 
-    erc20BorrowIssueFeeRate,
-    ethBorrowIssueFeeRate,
-    annualBorrowRate,
-
-    shortIssueFeeRate,
-    sETHShortRate,
-    sBTCShortRate,
+    annualLoanRates,
+    issueFeeRates,
+    interactionDelays,
   } = context;
 
   return {
@@ -510,13 +504,9 @@ export function useWallet() {
 
     collateralManagerContract,
 
-    erc20BorrowIssueFeeRate,
-    ethBorrowIssueFeeRate,
-    annualBorrowRate,
-
-    shortIssueFeeRate,
-    sETHShortRate,
-    sBTCShortRate,
+    annualLoanRates,
+    issueFeeRates,
+    interactionDelays,
   };
 }
 

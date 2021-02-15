@@ -218,14 +218,31 @@ export default function() {
       for (const type in loanContracts) {
         const contract = loanContracts[type];
 
-        // todo: refresh c-ratio
-
-        const onLoanCreated = async (owner, id) => {
-          const loan = await makeLoan({
+        const fetchLoan = async (owner, id) =>
+          makeLoan({
             loan: await loanStateContracts[type].getLoan(owner, id),
             type,
             minCRatio: await loanContracts[type].minCratio(),
           });
+
+        const updateLoan = async (owner, id) => {
+          const loan = await fetchLoan(owner, id);
+          setLoans(originalLoans => {
+            const loans = originalLoans.slice();
+            const idx = loans.findIndex(l => l.id.eq(id));
+            if (~idx) {
+              loans[idx] = loan;
+            } else {
+              console.warn(
+                `unknown loan(id=${id.toString()}, owner=${owner.toString()})`
+              );
+            }
+            return loans;
+          });
+        };
+
+        const onLoanCreated = async (owner, id) => {
+          const loan = await fetchLoan(owner, id);
           setLoans(loans => [loan, ...loans]);
         };
 
@@ -233,7 +250,7 @@ export default function() {
           setLoans(loans => loans.filter(loan => !loan.id.eq(id)));
         };
 
-        const onCollateralDeposited = (owner, id, amount) => {
+        const onCollateralDeposited = async (owner, id, amount) => {
           setLoans(loans =>
             loans.map(loan => {
               if (loan.id.eq(id)) {
@@ -242,9 +259,10 @@ export default function() {
               return loan;
             })
           );
+          await updateLoan(owner, id);
         };
 
-        const onCollateralWithdrawn = (owner, id, amount) => {
+        const onCollateralWithdrawn = async (owner, id, amount) => {
           setLoans(loans =>
             loans.map(loan => {
               if (loan.id.eq(id)) {
@@ -253,9 +271,10 @@ export default function() {
               return loan;
             })
           );
+          await updateLoan(owner, id);
         };
 
-        const onLoanRepaymentMade = (borrower, repayer, id, payment) => {
+        const onLoanRepaymentMade = async (borrower, repayer, id, payment) => {
           setLoans(loans =>
             loans.map(loan => {
               if (loan.id.eq(id)) {
@@ -264,9 +283,10 @@ export default function() {
               return loan;
             })
           );
+          await updateLoan(borrower, id);
         };
 
-        const onLoanDrawnDown = (owner, id, amount) => {
+        const onLoanDrawnDown = async (owner, id, amount) => {
           setLoans(loans =>
             loans.map(loan => {
               if (loan.id.eq(id)) {
@@ -275,6 +295,7 @@ export default function() {
               return loan;
             })
           );
+          await updateLoan(owner, id);
         };
 
         const loanCreatedEvent = contract.filters.LoanCreated(address);

@@ -1,4 +1,5 @@
 import React from 'react';
+import moment from 'moment';
 import { makeStyles } from '@material-ui/core/styles';
 import {
   Paper,
@@ -8,8 +9,11 @@ import {
   MenuItem,
   ClickAwayListener,
   Grow,
+  Box,
 } from '@material-ui/core';
 import { ArrowDropDown as ArrowDropDownIcon } from '@material-ui/icons';
+import { useWallet } from 'contexts/wallet';
+import { Big } from 'utils/big-number';
 
 const ACTIONS = ['DEPOSIT', 'WITHDRAW', 'REPAY', 'DRAW', 'CLOSE'];
 
@@ -23,10 +27,21 @@ export const useStyles = makeStyles(theme => ({
   },
 }));
 
-export default function({ onAct }) {
+export default function({ loan, onAct }) {
   const classes = useStyles();
-  const [open, setOpen] = React.useState(false);
   const anchorRef = React.useRef(null);
+  const { interactionDelays } = useWallet();
+  const [open, setOpen] = React.useState(false);
+  const [waitETA, setWaitETA] = React.useState('');
+
+  const nextInteractionDate = React.useMemo(() => {
+    if (!(loan.type && interactionDelays && loan.type in interactionDelays))
+      return;
+    const interactionDelay = interactionDelays[loan.type];
+    return moment
+      .unix(parseInt(loan.lastInteraction.toString()))
+      .add(parseInt(interactionDelay.toString()), 'seconds');
+  }, [loan.type, loan.lastInteraction, interactionDelays]);
 
   const handleMenuItemClick = (event, index) => {
     onAct(ACTIONS[index]);
@@ -44,6 +59,42 @@ export default function({ onAct }) {
 
     setOpen(false);
   };
+
+  React.useEffect(() => {
+    if (!nextInteractionDate) return;
+
+    let isMounted = true;
+    const unsubs = [() => (isMounted = false)];
+
+    const timer = () => {
+      const intervalId = setInterval(() => {
+        const now = moment.utc();
+        if (now.isAfter(nextInteractionDate)) {
+          return stopTimer();
+        }
+        if (isMounted) {
+          setWaitETA(
+            toHumanizedDuration(Big(nextInteractionDate.diff(now, 'seconds')))
+          );
+        }
+      }, 1000);
+
+      const stopTimer = () => {
+        if (isMounted) {
+          setWaitETA('');
+        }
+        clearInterval(intervalId);
+      };
+
+      unsubs.push(stopTimer);
+    };
+
+    timer();
+
+    return () => {
+      unsubs.forEach(unsub => unsub());
+    };
+  }, [nextInteractionDate]);
 
   return (
     <>
@@ -79,16 +130,22 @@ export default function({ onAct }) {
           >
             <Paper className={classes.container}>
               <ClickAwayListener onClickAway={handleClose}>
-                <MenuList id="actions-menu">
-                  {ACTIONS.map((option, index) => (
-                    <MenuItem
-                      key={option}
-                      onClick={event => handleMenuItemClick(event, index)}
-                    >
-                      {option}
-                    </MenuItem>
-                  ))}
-                </MenuList>
+                {waitETA ? (
+                  <Box p={2}>
+                    Recently interacted with this loan. Wait for {waitETA}.
+                  </Box>
+                ) : (
+                  <MenuList id="actions-menu">
+                    {ACTIONS.map((option, index) => (
+                      <MenuItem
+                        key={option}
+                        onClick={event => handleMenuItemClick(event, index)}
+                      >
+                        {option}
+                      </MenuItem>
+                    ))}
+                  </MenuList>
+                )}
               </ClickAwayListener>
             </Paper>
           </Grow>
@@ -96,4 +153,32 @@ export default function({ onAct }) {
       </Popper>
     </>
   );
+}
+
+function toHumanizedDuration(ms) {
+  const dur = {};
+  const units = [
+    { label: 's', mod: 60 },
+    { label: 'm', mod: 60 },
+    // { label: 'h', mod: 24 },
+    // { label: 'd', mod: 31 },
+    // {label: "w", mod: 7},
+  ];
+  units.forEach(u => {
+    const z = (dur[u.label] = ms.mod(u.mod));
+    ms = ms.sub(z).div(u.mod);
+  });
+  return units
+    .reverse()
+    .filter(u => {
+      return u.label !== 'ms'; // && dur[u.label]
+    })
+    .map(u => {
+      let val = dur[u.label];
+      if (u.label === 'm' || u.label === 's') {
+        val = val.toString().padStart(2, '0');
+      }
+      return val + u.label;
+    })
+    .join(':');
 }

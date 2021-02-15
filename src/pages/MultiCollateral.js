@@ -15,7 +15,12 @@ import Balance from 'components/Balance';
 import CRatio from 'components/CRatio';
 import ERC20_CONTRACT_ABI from 'abis/erc20.json';
 import { useNotifications } from 'contexts/notifications';
-import { MIN_CRATIO } from 'config';
+import {
+  MIN_CRATIO,
+  LOAN_TYPE_ERC20,
+  LOAN_TYPE_ETH,
+  // LOAN_TYPE_SHORT,
+} from 'config';
 
 export const useStyles = makeStyles(theme => ({
   container: {
@@ -95,13 +100,8 @@ export default function({ collateralAssetsFilter, debtAssets, short }) {
     shortLoanContract,
     exchangeRatesContract,
 
-    erc20BorrowIssueFeeRate,
-    ethBorrowIssueFeeRate,
-    annualBorrowRate,
-
-    shortIssueFeeRate,
-    sETHShortRate,
-    sBTCShortRate,
+    annualLoanRates,
+    issueFeeRates,
   } = useWallet();
 
   const [isApproving, setIsApproving] = React.useState(false);
@@ -420,32 +420,25 @@ export default function({ collateralAssetsFilter, debtAssets, short }) {
             {short ? (
               <>
                 <Box>Issuance Fee:</Box>
-                <Box>{toFixed(shortIssueFeeRate, 1, 2)}%</Box>
+                <Box>{toFixed(issueFeeRates.short, 1, 2)}%</Box>
                 <Box>Annual Short Rate:</Box>
-                <Box>
-                  {toFixed(
-                    debtName === 'sETH' ? sETHShortRate : sBTCShortRate,
-                    1,
-                    2
-                  )}
-                  %
-                </Box>
+                <Box>{toFixed(annualLoanRates[`${debtName}Short`], 1, 2)}%</Box>
               </>
             ) : (
               <>
                 <Box>Issuance Fee:</Box>
                 <Box>
                   {toFixed(
-                    collateralIsETH
-                      ? ethBorrowIssueFeeRate
-                      : erc20BorrowIssueFeeRate,
+                    issueFeeRates[
+                      collateralIsETH ? LOAN_TYPE_ETH : LOAN_TYPE_ERC20
+                    ],
                     1,
                     2
                   )}
                   %
                 </Box>
                 <Box>Annual Borrow Rate:</Box>
-                <Box>{toFixed(annualBorrowRate, 1, 2)}%</Box>
+                <Box>{toFixed(annualLoanRates.borrow, 1, 2)}%</Box>
               </>
             )}
           </Box>

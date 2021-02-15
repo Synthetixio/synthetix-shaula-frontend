@@ -104,6 +104,7 @@ export default function({ loan, onActOnLoan }) {
       </TableCell>
       <TableCell align="right">
         <ActionsButton
+          {...{ loan }}
           onAct={action =>
             onActOnLoan({
               loan,
