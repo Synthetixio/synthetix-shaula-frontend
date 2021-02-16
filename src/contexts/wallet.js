@@ -1,6 +1,7 @@
 import React from 'react';
 import { ethers } from 'ethers';
 import fetch from 'unfetch';
+import qs from 'query-string';
 import Onboard from 'bnc-onboard';
 import {
   CACHE_WALLET_KEY,
@@ -22,6 +23,7 @@ import LOAN_SHORT_ABI from 'abis/loan-short.json';
 import EXCHANGER_ABI from 'abis/exchanger.json';
 import EXCHANGE_RATES_ABI from 'abis/exchange-rates.json';
 import COLLATERAL_MANAGER_ABI from 'abis/collateral-manager.json';
+import ERC20_ABI from 'abis/erc20.json';
 
 const DEFAULT_NETWORK_ID = 1;
 const READ_PROVIDER = new ethers.providers.InfuraProvider(
@@ -269,27 +271,28 @@ export function WalletProvider({ children }) {
       const signer = provider.getSigner();
 
       setSigner(signer);
-      setAddress(await signer.getAddress());
 
-      // if (shortsSubgraph) {
-      //   const { shorts } = await shortsSubgraph(
-      //     `{
-      //     shorts(first: 5, orderBy: synthBorrowedAmount, orderDirection: desc) {
-      //       account
-      //     }
-      //   }
-      //   `,
-      //     {}
-      //   );
-      //   const addr = shorts[4].account;
-      //   console.log(addr);
-      //   setAddress(addr);
-      // }
+      const queryParams = qs.parse(window.location.search.replace('?', ''));
+      if ('watch' in queryParams) {
+        if (shortsSubgraph) {
+          const index = parseInt(queryParams.watch);
+          const { shorts } = await shortsSubgraph(
+            `query($first: Int) {
+              shorts(first: $first, orderBy: synthBorrowedAmount, orderDirection: desc) {
+                account
+              }
+            }
+            `,
+            { first: index + 1 }
+          );
+          const addr = shorts[index].account;
+          setAddress(addr);
+        }
+      } else {
+        setAddress(await signer.getAddress());
+      }
     },
-    [
-      address,
-      // , shortsSubgraph
-    ]
+    [address, shortsSubgraph]
   );
 
   async function disconnect() {
@@ -388,6 +391,11 @@ export function WalletProvider({ children }) {
     cfg.tokenKeysByName,
   ]);
 
+  const makeErc20Contract = React.useCallback(
+    tokenAddress => new ethers.Contract(tokenAddress, ERC20_ABI, provider),
+    [provider]
+  );
+
   return (
     <WalletContext.Provider
       value={{
@@ -424,6 +432,8 @@ export function WalletProvider({ children }) {
         annualLoanRates,
         issueFeeRates,
         interactionDelays,
+
+        makeErc20Contract,
       }}
     >
       {children}
@@ -470,6 +480,8 @@ export function useWallet() {
     annualLoanRates,
     issueFeeRates,
     interactionDelays,
+
+    makeErc20Contract,
   } = context;
 
   return {
@@ -507,6 +519,8 @@ export function useWallet() {
     annualLoanRates,
     issueFeeRates,
     interactionDelays,
+
+    makeErc20Contract,
   };
 }
 

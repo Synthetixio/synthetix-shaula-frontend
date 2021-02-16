@@ -19,7 +19,11 @@
       ],
       "ETH": [
         18,
-        "0xee"
+        "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+      ],
+      "WBTC": [
+        8,
+        "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599"
       ]
     },
     "erc20LoanContractAddress": "0xaa03aB31b55DceEeF845C8d17890CC61cD98eD04",
@@ -55,7 +59,11 @@
       ],
       "ETH": [
         18,
-        "0xee"
+        "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+      ],
+      "WBTC": [
+        8,
+        "0xd3a691c852cdb01e281545a27064741f0b7f6825"
       ]
     },
     "erc20LoanContractAddress": "0x5AD5469D8A1Eee2cF7c8B8205CbeD95A032cdff3",

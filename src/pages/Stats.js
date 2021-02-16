@@ -25,10 +25,10 @@ export const useStyles = makeStyles(theme => ({
     },
     '& table': {
       width: 'auto',
-      marginLeft: -16,
+      // marginLeft: -16,
     },
     '& td, th': {
-      border: 'none',
+      // border: 'none',
     },
     '& h3': {
       marginTop: 0,
@@ -206,7 +206,7 @@ export default function({ className }) {
                   <TableHead>
                     <TableRow>
                       <TableCell>Asset</TableCell>
-                      <TableCell align={'right'}>Rewards APR</TableCell>
+                      <TableCell align={'right'}>Rewards&nbsp;APR</TableCell>
                       <TableCell align={'right'}>Open&nbsp;Interest</TableCell>
                     </TableRow>
                   </TableHead>
@@ -224,18 +224,16 @@ export default function({ className }) {
                     ))}
 
                     <TableRow>
-                      <TableCell colSpan={2}>
-                        <b>Total</b>
-                      </TableCell>
+                      <TableCell colSpan={2}>Total</TableCell>
                       <TableCell align={'right'}>
-                        <b>${toFixed(shortsOpenInterest, 1, 2)}</b>
+                        ${toFixed(shortsOpenInterest, 1, 2)}
                       </TableCell>
                     </TableRow>
                   </TableBody>
                 </Table>
               </Box>
 
-              <Box className="flex flex-col" mt={3}>
+              <Box className="flex flex-col" mt={5}>
                 <h3>Borrows</h3>
                 <Table aria-label="Stats" size="small">
                   <TableHead>
@@ -255,11 +253,9 @@ export default function({ className }) {
                     ))}
 
                     <TableRow>
-                      <TableCell>
-                        <b>Total</b>
-                      </TableCell>
+                      <TableCell>Total</TableCell>
                       <TableCell align={'right'}>
-                        <b>${toFixed(borrowsOpenInterest, 1, 2)}</b>
+                        ${toFixed(borrowsOpenInterest, 1, 2)}
                       </TableCell>
                     </TableRow>
                   </TableBody>

@@ -14,6 +14,7 @@ import {
 import { ArrowDropDown as ArrowDropDownIcon } from '@material-ui/icons';
 import { useWallet } from 'contexts/wallet';
 import { Big } from 'utils/big-number';
+import { LOAN_TYPE_SHORT } from 'config';
 
 const ACTIONS = ['DEPOSIT', 'WITHDRAW', 'REPAY', 'DRAW', 'CLOSE'];
 
@@ -24,6 +25,10 @@ export const useStyles = makeStyles(theme => ({
   container: {
     background: 'rgb(53, 197, 243)',
     color: 'rgb(6, 6, 27)',
+  },
+  interactionInfoBox: {
+    width: 200,
+    textAlign: 'left',
   },
 }));
 
@@ -43,8 +48,13 @@ export default function({ loan, onAct }) {
       .add(parseInt(interactionDelay.toString()), 'seconds');
   }, [loan.type, loan.lastInteraction, interactionDelays]);
 
+  const actions = ACTIONS.slice();
+  if (loan.type === LOAN_TYPE_SHORT) {
+    actions.push('HEDGE');
+  }
+
   const handleMenuItemClick = (event, index) => {
-    onAct(ACTIONS[index]);
+    onAct(actions[index]);
     setOpen(false);
   };
 
@@ -131,12 +141,14 @@ export default function({ loan, onAct }) {
             <Paper className={classes.container}>
               <ClickAwayListener onClickAway={handleClose}>
                 {waitETA ? (
-                  <Box p={2}>
-                    Recently interacted with this loan. Wait for {waitETA}.
+                  <Box p={2} className={classes.interactionInfoBox}>
+                    There is a waiting period after interacting with a loan.
+                    Please wait approximately {waitETA} before reinteracting
+                    with it.
                   </Box>
                 ) : (
                   <MenuList id="actions-menu">
-                    {ACTIONS.map((option, index) => (
+                    {actions.map((option, index) => (
                       <MenuItem
                         key={option}
                         onClick={event => handleMenuItemClick(event, index)}

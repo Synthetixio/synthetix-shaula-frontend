@@ -41,6 +41,8 @@ async function main() {
 }
 
 async function getNetworkConfig(network) {
+  const kovan = network === 'kovan';
+
   const infuraProvider = new ethers.providers.InfuraProvider(
     network,
     INFURA_ID
@@ -84,13 +86,16 @@ async function getNetworkConfig(network) {
     ].map(request.bind(null, network))
   );
 
+  const wbtcAddress = kovan
+    ? '0xd3a691c852cdb01e281545a27064741f0b7f6825'
+    : '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599';
+
   const loanContract = new ethers.Contract(
     erc20LoanContractAddress,
     LOAN_ERC20_ABI,
     infuraProvider
   );
   const renBTCAddress = await loanContract.underlyingContract();
-  const kovan = network === 'kovan';
 
   const cfg = {
     tokens: {
@@ -98,7 +103,8 @@ async function getNetworkConfig(network) {
       sETH: [18, sETHAddress],
       sUSD: [18, sUSDAddress],
       renBTC: [8, renBTCAddress],
-      ETH: [18, '0xee'],
+      ETH: [18, '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'],
+      WBTC: [8, wbtcAddress],
     },
 
     erc20LoanContractAddress,

@@ -6,6 +6,7 @@ import Withdraw from './Withdraw';
 import Repay from './Repay';
 import Draw from './Draw';
 import Close from './Close';
+import Hedge from './Hedge';
 
 const ACTIONS = {
   DEPOSIT: Deposit,
@@ -13,6 +14,7 @@ const ACTIONS = {
   DRAW: Draw,
   REPAY: Repay,
   CLOSE: Close,
+  HEDGE: Hedge,
 };
 
 const noop = () => {};
