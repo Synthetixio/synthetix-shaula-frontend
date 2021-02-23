@@ -35,7 +35,7 @@
     "collateralManagerAddress": "0x067e398605E84F2D0aEEC1806e62768C5110DCc6",
     "exchangerAddress": "0x0bfDc04B38251394542586969E2356d0D731f7DE",
     "exchangeRatesAddress": "0xd69b189020EF614796578AfE4d10378c5e7e1138",
-    "shortsSubgraphUrl": "https://api.thegraph.com/subgraphs/name/dvd-schwrtz/test",
+    "shortsSubgraphUrl": "https://api.thegraph.com/subgraphs/name/vbstreetz/synthetix-shorts",
     "erc20LoansSubgraphUrl": "https://api.thegraph.com/subgraphs/name/vbstreetz/collateral-erc20-loans",
     "ethLoansSubgraphUrl": "https://api.thegraph.com/subgraphs/name/vbstreetz/collateral-eth-loans"
   },
@@ -75,7 +75,7 @@
     "collateralManagerAddress": "0x53baE964339e8A742B5b47F6C10bbfa8Ff138F34",
     "exchangerAddress": "0xF49528689234d46724383669BD8658bfB47f8575",
     "exchangeRatesAddress": "0xC9985cAc4a69588Da66F74E42845B784798fe5aB",
-    "shortsSubgraphUrl": "https://api.thegraph.com/subgraphs/name/vbstreetz/synthetix-shorts",
+    "shortsSubgraphUrl": "https://api.thegraph.com/subgraphs/name/vbstreetz/synthetix-shorts-kovan",
     "erc20LoansSubgraphUrl": "https://api.thegraph.com/subgraphs/name/vbstreetz/collateral-erc20-loans-kovan",
     "ethLoansSubgraphUrl": "https://api.thegraph.com/subgraphs/name/vbstreetz/collateral-eth-loans-kovan"
   }

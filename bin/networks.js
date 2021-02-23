@@ -121,8 +121,8 @@ async function getNetworkConfig(network) {
     exchangeRatesAddress,
 
     shortsSubgraphUrl: kovan
-      ? 'https://api.thegraph.com/subgraphs/name/vbstreetz/synthetix-shorts'
-      : 'https://api.thegraph.com/subgraphs/name/dvd-schwrtz/test',
+      ? 'https://api.thegraph.com/subgraphs/name/vbstreetz/synthetix-shorts-kovan'
+      : 'https://api.thegraph.com/subgraphs/name/vbstreetz/synthetix-shorts',
 
     erc20LoansSubgraphUrl: kovan
       ? 'https://api.thegraph.com/subgraphs/name/vbstreetz/collateral-erc20-loans-kovan'
