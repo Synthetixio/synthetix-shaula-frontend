@@ -129,12 +129,12 @@ export default function() {
         [LOAN_TYPE_ERC20]: 'erc20Loans',
         [LOAN_TYPE_ETH]: 'ethLoans',
       }[type];
-      const collateralAsset = {
-        [LOAN_TYPE_ERC20]: 'sBTC',
-        [LOAN_TYPE_ETH]: 'sETH',
-        [LOAN_TYPE_SHORT]: 'sUSD',
-      }[type];
-      const collateralCurrency = config.tokenKeysByName[collateralAsset];
+      // const collateralAsset = {
+      //   [LOAN_TYPE_ERC20]: 'sBTC',
+      //   [LOAN_TYPE_ETH]: 'sETH',
+      //   [LOAN_TYPE_SHORT]: 'sUSD',
+      // }[type];
+      // const collateralCurrency = config.tokenKeysByName[collateralAsset];
       const loanContract = loanContracts[type];
       const {
         [query]: [{ txHash }],
@@ -161,9 +161,7 @@ export default function() {
           blockTag: creationBlockNumber,
         }),
         exchangeRatesContract.rateForCurrency(loan.currency),
-        type !== LOAN_TYPE_SHORT
-          ? Promise.resolve(0)
-          : exchangeRatesContract.rateForCurrency(collateralCurrency),
+        type !== LOAN_TYPE_SHORT ? Promise.resolve(0) : Promise.resolve(1e18), // exchangeRatesContract.rateForCurrency(collateralCurrency),
         loanContract.collateralRatio(loan),
       ]);
       const loanAmount = Big(loan.amount).div(1e18);
@@ -179,13 +177,6 @@ export default function() {
       }
       const pnl = pnlPercentage.mul(loanAmount).mul(initialUSDPrice);
       pnlPercentage = pnlPercentage.mul(1e2);
-
-      // console.log({
-      //   initialUSDPrice: initialUSDPrice.toString(),
-      //   latestUSDPrice: latestUSDPrice.toString(),
-      //   pnl: pnl.toString(),
-      //   pnlPercentage: pnlPercentage.toString(),
-      // });
 
       const accruedInterestUSD = Big(loan.accruedInterest).mul(latestUSDPrice);
 

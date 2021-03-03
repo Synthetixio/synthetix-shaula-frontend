@@ -10,7 +10,7 @@ import {
   Button,
 } from '@material-ui/core';
 import { useWallet } from 'contexts/wallet';
-import { isZero, formatUnits, toFixed } from 'utils/big-number';
+import { isZero, formatUnits, toFixed, Big } from 'utils/big-number';
 import Balance from 'components/Balance';
 import CRatio from 'components/CRatio';
 import ERC20_CONTRACT_ABI from 'abis/erc20.json';
@@ -109,6 +109,7 @@ export default function({ collateralAssetsFilter, debtAssets, short }) {
   const [isTrading, setIsTrading] = React.useState(false);
 
   const [cratio, setCRatio] = React.useState(ethers.BigNumber.from('0'));
+  const [minCRatio, setMinCRatio] = React.useState(Big('0'));
 
   const [debtName, setDebtAsset] = React.useState(debtAssets[0]);
   const [debtDecimals, debtAddress] = React.useMemo(
@@ -183,6 +184,16 @@ export default function({ collateralAssetsFilter, debtAssets, short }) {
 
   const cratioIsComputed =
     !!signer && short && !collateralAmount.isZero() && !debtAmount.isZero();
+
+  const liquidationPriceUSD = React.useMemo(
+    () =>
+      !(!isZero(minCRatio) && !isZero(collateralAmount) && !isZero(debtAmount))
+        ? Big(0)
+        : Big(collateralAmount)
+            .mul(Big(1e18))
+            .div(Big(debtAmount).mul(Big(minCRatio))),
+    [collateralAmount, debtAmount, minCRatio]
+  );
 
   const onConnectOrApproveOrTrade = async () => {
     if (!signer) {
@@ -298,22 +309,29 @@ export default function({ collateralAssetsFilter, debtAssets, short }) {
           tokenKeysByName[collateralName] &&
           tokenKeysByName[debtName] &&
           !isZero(collateralAmount) &&
-          !isZero(debtAmount)
+          !isZero(debtAmount) &&
+          loanContract
         )
       ) {
         return setCRatio(ethers.BigNumber.from('0'));
       }
-      const [collateralUSDPrice] = await exchangeRatesContract.rateAndInvalid(
-        tokenKeysByName[collateralName]
-      );
-      const [debtUSDPrice] = await exchangeRatesContract.rateAndInvalid(
-        tokenKeysByName[debtName]
-      );
+      const [
+        [collateralUSDPrice],
+        [debtUSDPrice],
+        minCRatio,
+      ] = await Promise.all([
+        exchangeRatesContract.rateAndInvalid(tokenKeysByName[collateralName]),
+        exchangeRatesContract.rateAndInvalid(tokenKeysByName[debtName]),
+        loanContract.minCratio(),
+      ]);
       const cratio = collateralAmount
         .mul(collateralUSDPrice)
         .mul(100)
         .div(debtUSDPrice.mul(debtAmount));
-      if (isMounted) setCRatio(cratio);
+      if (isMounted) {
+        setCRatio(cratio);
+        setMinCRatio(minCRatio);
+      }
     })();
     return () => (isMounted = false);
   }, [
@@ -324,6 +342,7 @@ export default function({ collateralAssetsFilter, debtAssets, short }) {
     debtAmount,
     debtName,
     exchangeRatesContract,
+    loanContract,
   ]);
 
   return (
@@ -467,7 +486,12 @@ export default function({ collateralAssetsFilter, debtAssets, short }) {
 
         {!cratioIsComputed ? null : (
           <Box mt={2} className="flex justify-end">
-            <CRatio {...{ cratio }} />
+            <div className="flex flex-col">
+              <CRatio {...{ cratio }} />
+              <div>
+                Liquidation Price: {toFixed(liquidationPriceUSD, 1, 2)} sUSD
+              </div>
+            </div>
           </Box>
         )}
       </div>
