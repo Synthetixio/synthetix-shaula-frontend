@@ -103,6 +103,11 @@ export default function({ loan, onActOnLoan }) {
         </div>
       </TableCell>
       <TableCell align="right">
+        {isZero(loan.liquidationPriceUSD)
+          ? '-'
+          : `${toFixed(loan.liquidationPriceUSD, 1, 2)} sUSD`}
+      </TableCell>
+      <TableCell align="right">
         <ActionsButton
           {...{ loan }}
           onAct={action =>

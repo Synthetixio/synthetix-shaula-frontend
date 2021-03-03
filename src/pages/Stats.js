@@ -161,6 +161,7 @@ export default function({ className }) {
       } catch (e) {
         console.error(e);
         if (isMounted) {
+          setBorrows([]);
           setShorts([]);
         }
       } finally {
@@ -222,7 +223,6 @@ export default function({ className }) {
                         </TableCell>
                       </TableRow>
                     ))}
-
                     <TableRow>
                       <TableCell colSpan={2}>Total</TableCell>
                       <TableCell align={'right'}>
@@ -251,7 +251,6 @@ export default function({ className }) {
                         </TableCell>
                       </TableRow>
                     ))}
-
                     <TableRow>
                       <TableCell>Total</TableCell>
                       <TableCell align={'right'}>

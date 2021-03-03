@@ -65,6 +65,7 @@ export default function() {
     shortsSubgraph,
     erc20LoansSubgraph,
     ethLoansSubgraph,
+    config,
   } = useWallet();
 
   const [isLoading, setIsLoading] = React.useState(false);
@@ -81,7 +82,8 @@ export default function() {
         exchangeRatesContract &&
         shortsSubgraph &&
         erc20LoansSubgraph &&
-        ethLoansSubgraph
+        ethLoansSubgraph &&
+        config.tokenKeysByName
       )
     )
       return;
@@ -127,6 +129,13 @@ export default function() {
         [LOAN_TYPE_ERC20]: 'erc20Loans',
         [LOAN_TYPE_ETH]: 'ethLoans',
       }[type];
+      const collateralAsset = {
+        [LOAN_TYPE_ERC20]: 'sBTC',
+        [LOAN_TYPE_ETH]: 'sETH',
+        [LOAN_TYPE_SHORT]: 'sUSD',
+      }[type];
+      const collateralCurrency = config.tokenKeysByName[collateralAsset];
+      const loanContract = loanContracts[type];
       const {
         [query]: [{ txHash }],
       } = await subgraph(
@@ -140,12 +149,22 @@ export default function() {
       const {
         blockNumber: creationBlockNumber,
       } = await signer.provider.getTransaction(txHash);
+
       // const interest = loan.amount.add(loan.accruedInterest).mul(debtUSDPrice);
-      let [initialUSDPrice, latestUSDPrice] = await Promise.all([
+      let [
+        initialUSDPrice,
+        latestUSDPrice,
+        collateralUSDPrice,
+        cratio,
+      ] = await Promise.all([
         exchangeRatesContract.rateForCurrency(loan.currency, {
           blockTag: creationBlockNumber,
         }),
         exchangeRatesContract.rateForCurrency(loan.currency),
+        type !== LOAN_TYPE_SHORT
+          ? Promise.resolve(0)
+          : exchangeRatesContract.rateForCurrency(collateralCurrency),
+        loanContract.collateralRatio(loan),
       ]);
       const loanAmount = Big(loan.amount).div(1e18);
       initialUSDPrice = Big(initialUSDPrice).div(1e18);
@@ -170,14 +189,21 @@ export default function() {
 
       const accruedInterestUSD = Big(loan.accruedInterest).mul(latestUSDPrice);
 
+      const liquidationPriceUSD = !collateralUSDPrice
+        ? Big(0)
+        : Big(loan.collateral)
+            .mul(Big(collateralUSDPrice))
+            .div(Big(loan.amount).mul(Big(minCRatio)));
+
       return {
         ...loan,
         type,
         minCRatio,
-        cratio: await loanContracts[type].collateralRatio(loan),
+        cratio,
         pnl,
         pnlPercentage,
         accruedInterestUSD,
+        liquidationPriceUSD,
       };
     };
 
@@ -350,6 +376,7 @@ export default function() {
     erc20LoansSubgraph,
     ethLoansSubgraph,
     signer,
+    config.tokenKeysByName,
   ]);
 
   const startActOnLoan = args => setLoanBeingActedOn(args);
@@ -379,6 +406,7 @@ export default function() {
                   <TableCell align="right">PNL</TableCell>
                   <TableCell align="right">Accrued&nbsp; Interest</TableCell>
                   <TableCell align="right">CRatio</TableCell>
+                  <TableCell align="right">Liquidation Price</TableCell>
                   <TableCell align="right"></TableCell>
                 </TableRow>
               </TableHead>

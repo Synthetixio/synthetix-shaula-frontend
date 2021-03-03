@@ -80,10 +80,10 @@ export function WalletProvider({ children }) {
     const tokenKeysByName = {};
     const tokenKeysByKey = {};
 
-    ['sBTC', 'sETH', 'sUSD', 'SNX'].forEach(currency => {
-      const key = bytesFormatter(currency);
-      tokenKeysByName[currency] = key;
-      tokenKeysByKey[key] = currency;
+    ['sBTC', 'sETH', 'sUSD', 'SNX'].forEach(name => {
+      const key = bytesFormatter(name);
+      tokenKeysByName[name] = key;
+      tokenKeysByKey[key] = name;
     });
 
     return { ...cfg, tokenKeysByName, tokenKeysByKey };
