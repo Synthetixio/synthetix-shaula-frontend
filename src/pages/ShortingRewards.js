@@ -10,12 +10,10 @@ import {
   TableRow,
 } from '@material-ui/core';
 import clsx from 'clsx';
-import * as ethers from 'ethers';
 import { useWallet } from 'contexts/wallet';
 import Loader from 'components/Loader';
 import { formatUnits } from 'utils/big-number';
 import { useNotifications } from 'contexts/notifications';
-import REWARDS_CONTRACT_ABI from 'abis/shorting-rewards.json';
 
 export const useStyles = makeStyles(theme => ({
   container: {
@@ -63,53 +61,13 @@ export default function({ className }) {
     address,
     version,
     config: { tokenKeysByName },
-    shortLoanContract,
     collateralManagerContract,
     exchangeRatesContract,
+    rewardsContracts,
   } = useWallet();
 
   const [isLoading, setIsLoading] = React.useState(false);
   const [rewards, setRewards] = React.useState([]);
-  const [rewardsContracts, setRewardsContracts] = React.useState([]);
-
-  React.useEffect(() => {
-    let isMounted = true;
-    (async () => {
-      if (version === 1) {
-        if (isMounted) {
-          setRewardsContracts([]);
-        }
-        return;
-      }
-      if (!(signer && shortLoanContract && tokenKeysByName)) {
-        return;
-      }
-
-      const getRewardContract = async currency => {
-        const currencyAddress = tokenKeysByName[currency];
-        const rewardAddress = await shortLoanContract.shortingRewards(
-          currencyAddress
-        );
-        return {
-          currency,
-          currencyAddress,
-          contract: new ethers.Contract(
-            rewardAddress,
-            REWARDS_CONTRACT_ABI,
-            signer
-          ),
-        };
-      };
-      const contracts = await Promise.all(
-        ['sBTC', 'sETH'].map(getRewardContract)
-      );
-
-      if (isMounted) {
-        setRewardsContracts(contracts);
-      }
-    })();
-    return () => (isMounted = false);
-  }, [shortLoanContract, tokenKeysByName, signer, version]);
 
   React.useEffect(() => {
     if (version === 1) {
@@ -119,7 +77,7 @@ export default function({ className }) {
     }
     if (
       !(
-        rewardsContracts.length &&
+        rewardsContracts &&
         address &&
         signer &&
         collateralManagerContract &&
@@ -134,25 +92,22 @@ export default function({ className }) {
     const unsubs = [() => (isMounted = false)];
 
     const load = async () => {
-      const getRewards = async ({
-        contract: rewardsContract,
-        currency,
-        ...rest
-      }) => {
+      const getRewards = async ([currency, rewardsContract]) => {
         // console.trace();
         const [claimAmount] = await Promise.all([
           rewardsContract.earned(address),
         ]);
 
         return {
-          ...rest,
           rewardsContract,
           currency,
           claimAmount,
         };
       };
       try {
-        const rewards = await Promise.all(rewardsContracts.map(getRewards));
+        const rewards = await Promise.all(
+          Array.from(rewardsContracts.entries()).map(getRewards)
+        );
         if (isMounted) {
           setRewards(rewards);
         }
@@ -169,11 +124,11 @@ export default function({ className }) {
     };
 
     const subscribe = () => {
-      rewardsContracts.forEach(({ contract }) => {
+      for (const contract in rewardsContracts.values()) {
         const claimEvent = contract.filters.RewardPaid(address);
         contract.on(claimEvent, load);
         unsubs.push(() => contract.off(claimEvent, load));
-      });
+      }
 
       const newBlockEvent = 'block';
       signer.provider.on(newBlockEvent, load);

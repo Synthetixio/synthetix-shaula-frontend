@@ -66,6 +66,7 @@ export default function({ className }) {
     config: { tokenKeysByName },
     collateralManagerContract,
     exchangeRatesContract,
+    rewardsContracts,
   } = useWallet();
 
   const [isLoading, setIsLoading] = React.useState(false);
@@ -92,7 +93,8 @@ export default function({ className }) {
         signerOrProvider &&
         collateralManagerContract &&
         exchangeRatesContract &&
-        tokenKeysByName
+        tokenKeysByName &&
+        rewardsContracts
       )
     ) {
       return setIsLoading(true);
@@ -128,10 +130,13 @@ export default function({ className }) {
         .div(1e18)
         .mul(Big(assetUSDPrice).div(1e18));
 
-      const weeklyStats = 8000;
+      const rewardsContract = rewardsContracts.get(currency);
+      const weeklySNXRewards = await rewardsContract.getRewardForDuration();
       const weeksInAYear = 52;
 
-      const apr = Big(weeklyStats * Big(snxUSDPrice).div(1e18))
+      const apr = Big(weeklySNXRewards)
+        .div(1e18)
+        .mul(Big(snxUSDPrice).div(1e18))
         .mul(100)
         .mul(weeksInAYear)
         .div(openInterestUSD);
@@ -188,6 +193,7 @@ export default function({ className }) {
     collateralManagerContract,
     tokenKeysByName,
     exchangeRatesContract,
+    rewardsContracts,
   ]);
 
   return (

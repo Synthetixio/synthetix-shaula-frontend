@@ -24,6 +24,7 @@ import EXCHANGER_ABI from 'abis/exchanger.json';
 import EXCHANGE_RATES_ABI from 'abis/exchange-rates.json';
 import COLLATERAL_MANAGER_ABI from 'abis/collateral-manager.json';
 import ERC20_ABI from 'abis/erc20.json';
+import REWARDS_CONTRACT_ABI from 'abis/shorting-rewards.json';
 
 const DEFAULT_NETWORK_ID = 1;
 const READ_PROVIDER = new ethers.providers.InfuraProvider(
@@ -54,6 +55,7 @@ export function WalletProvider({ children }) {
   const [signer, setSigner] = React.useState(null);
   const [network, setNetwork] = React.useState('');
   const [version, setVersion] = React.useState(2);
+  const [rewardsContracts, setRewardsContracts] = React.useState(null);
 
   const [annualLoanRates, setAnnualLoanRates] = React.useState({
     borrow: Big('0'),
@@ -85,7 +87,6 @@ export function WalletProvider({ children }) {
       tokenKeysByName[name] = key;
       tokenKeysByKey[key] = name;
     });
-
     return { ...cfg, tokenKeysByName, tokenKeysByKey };
   }, [network, version]);
 
@@ -391,6 +392,43 @@ export function WalletProvider({ children }) {
     cfg.tokenKeysByName,
   ]);
 
+  // rewards contracts
+
+  React.useEffect(() => {
+    let isMounted = true;
+    (async () => {
+      if (version === 1) {
+        if (isMounted) {
+          setRewardsContracts(null);
+        }
+        return;
+      }
+      if (!(signer && shortLoanContract && cfg.tokenKeysByName)) {
+        return;
+      }
+
+      const getRewardContract = async currency => {
+        const currencyAddress = cfg.tokenKeysByName[currency];
+        const rewardAddress = await shortLoanContract.shortingRewards(
+          currencyAddress
+        );
+        return [
+          currency,
+          new ethers.Contract(rewardAddress, REWARDS_CONTRACT_ABI, signer),
+        ];
+      };
+
+      const contracts = new Map(
+        await Promise.all(['sBTC', 'sETH'].map(getRewardContract))
+      );
+
+      if (isMounted) {
+        setRewardsContracts(contracts);
+      }
+    })();
+    return () => (isMounted = false);
+  }, [shortLoanContract, cfg.tokenKeysByName, signer, version]);
+
   const makeErc20Contract = React.useCallback(
     tokenAddress => new ethers.Contract(tokenAddress, ERC20_ABI, provider),
     [provider]
@@ -428,6 +466,8 @@ export function WalletProvider({ children }) {
         exchangeRatesContract,
 
         collateralManagerContract,
+
+        rewardsContracts,
 
         annualLoanRates,
         issueFeeRates,
@@ -477,6 +517,8 @@ export function useWallet() {
 
     collateralManagerContract,
 
+    rewardsContracts,
+
     annualLoanRates,
     issueFeeRates,
     interactionDelays,
@@ -515,6 +557,8 @@ export function useWallet() {
     exchangeRatesContract,
 
     collateralManagerContract,
+
+    rewardsContracts,
 
     annualLoanRates,
     issueFeeRates,
