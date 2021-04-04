@@ -14,6 +14,8 @@ import { useWallet } from 'contexts/wallet';
 import Loader from 'components/Loader';
 import { toFixed, Big } from 'utils/big-number';
 
+const SECONDS_IN_A_YR = 365 * 24 * 60 * 60;
+
 export const useStyles = makeStyles(theme => ({
   container: {
     background: 'rgb(16, 16, 78)', // 'linear-gradient(0deg, rgb(8, 2, 30) 0%, rgb(18, 4, 70) 146.21%)',
@@ -120,26 +122,32 @@ export default function({ className }) {
     };
 
     const getShortStats = async currency => {
-      const [openInterest, [assetUSDPrice], snxUSDPrice] = await Promise.all([
+      const rewardsContract = rewardsContracts.get(currency);
+
+      const [
+        openInterest,
+        [assetUSDPrice],
+        snxUSDPrice,
+        rewardsRate,
+        rewardsTotalSupply,
+      ] = await Promise.all([
         collateralManagerContract.short(tokenKeysByName[currency]),
         exchangeRatesContract.rateAndInvalid(tokenKeysByName[currency]),
         exchangeRatesContract.rateForCurrency(tokenKeysByName['SNX']),
+        rewardsContract.rewardRate(),
+        rewardsContract.totalSupply(),
       ]);
 
       const openInterestUSD = Big(openInterest)
         .div(1e18)
         .mul(Big(assetUSDPrice).div(1e18));
 
-      const rewardsContract = rewardsContracts.get(currency);
-      const weeklySNXRewards = await rewardsContract.getRewardForDuration();
-      const weeksInAYear = 52;
-
-      const apr = Big(weeklySNXRewards)
-        .div(1e18)
-        .mul(Big(snxUSDPrice).div(1e18))
-        .mul(100)
-        .mul(weeksInAYear)
-        .div(openInterestUSD);
+      const apr = Big(rewardsRate)
+        .mul(SECONDS_IN_A_YR)
+        .mul(snxUSDPrice)
+        .div(rewardsTotalSupply)
+        .div(assetUSDPrice)
+        .mul(100);
 
       return {
         currency,
@@ -222,7 +230,7 @@ export default function({ className }) {
                       <TableRow key={stat.currency}>
                         <TableCell>{stat.currency}</TableCell>
                         <TableCell align={'right'}>
-                          {toFixed(stat.apr, 1, 0)}%
+                          {toFixed(stat.apr, 1, 2)}%
                         </TableCell>
                         <TableCell align={'right'}>
                           ${toFixed(stat.openInterest, 1, 2)}
